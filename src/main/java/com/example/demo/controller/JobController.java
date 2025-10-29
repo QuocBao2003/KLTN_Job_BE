@@ -1,10 +1,12 @@
 package com.example.demo.controller;
 
 import com.example.demo.domain.Job;
+import com.example.demo.dto.JobStatisticsDTO;
 import com.example.demo.dto.response.job.ResCreateJobDTO;
 import com.example.demo.dto.response.job.ResUpdateJobDTO;
 import com.example.demo.dto.response.ResultPaginationDTO;
 import com.example.demo.service.JobService;
+import com.example.demo.util.Enum.LevelEnum;
 import com.example.demo.util.annotation.ApiMessage;
 import com.example.demo.util.error.IdInvalidException;
 import com.turkraft.springfilter.boot.Filter;
@@ -15,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -67,4 +70,18 @@ public class JobController {
         return ResponseEntity.ok(this.jobService.getAllJob(spec,pageable));
     }
 
+    @GetMapping("/jobs/statistics/level")
+    public ResponseEntity<List<JobStatisticsDTO>> getStatisticsByLevel() {
+        return ResponseEntity.ok(jobService.getStatisticsByLevel());
+    }
+
+    @GetMapping("/jobs/statistics/location")
+    public ResponseEntity<List<JobStatisticsDTO>> getStatisticsByLocation() {
+        return ResponseEntity.ok(jobService.getStatisticsByLocation());
+    }
+
+    @GetMapping("/jobs/statistics/company")
+    public ResponseEntity<List<JobStatisticsDTO>> getStatisticsByCompany() {
+        return ResponseEntity.ok(jobService.getStatisticsByCompany());
+    }
 }

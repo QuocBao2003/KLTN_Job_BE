@@ -27,6 +27,8 @@ public class User {
     @NotBlank(message = "email không được để trống")
     private String email;
 
+    private int age;
+
 
     @Enumerated(EnumType.STRING)
     private GenderEnum gender;

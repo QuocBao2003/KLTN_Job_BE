@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.domain.Company;
 import com.example.demo.domain.Job;
 import com.example.demo.domain.Skill;
+import com.example.demo.dto.JobStatisticsDTO;
 import com.example.demo.dto.response.job.ResCreateJobDTO;
 import com.example.demo.dto.response.job.ResUpdateJobDTO;
 import com.example.demo.dto.response.ResultPaginationDTO;
@@ -142,6 +143,39 @@ public class JobService {
             rs.setResult(pagejob.getContent());
             return  rs;
         }
+
+    public List<JobStatisticsDTO> getStatisticsByLevel() {
+        List<Object[]> results = jobRepository.getJobStatisticsByLevel();
+        return results.stream()
+                .map(row -> new JobStatisticsDTO(
+                        (String) row[0],  // level
+                        ((Number) row[1]).longValue(),  // count
+                        row[2] != null ? ((Number) row[2]).doubleValue() : 0.0  // avg salary
+                ))
+                .collect(Collectors.toList());
     }
+
+    public List<JobStatisticsDTO> getStatisticsByLocation() {
+        List<Object[]> results = jobRepository.getJobStatisticsByLocation();
+        return results.stream()
+                .map(row -> JobStatisticsDTO.forLocation(
+                        (String) row[0],  // location
+                        ((Number) row[1]).longValue(),  // count
+                        row[2] != null ? ((Number) row[2]).doubleValue() : 0.0  // avg salary
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public List<JobStatisticsDTO> getStatisticsByCompany() {
+        List<Object[]> results = jobRepository.getJobStatisticsByCompany();
+        return results.stream()
+                .map(row -> JobStatisticsDTO.forCompany(
+                        (String) row[0],  // company name
+                        ((Number) row[1]).longValue(),  // count
+                        row[2] != null ? ((Number) row[2]).doubleValue() : 0.0  // avg salary
+                ))
+                .collect(Collectors.toList());
+    }
+}
 
 
