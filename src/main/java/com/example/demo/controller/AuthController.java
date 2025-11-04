@@ -11,6 +11,7 @@ import com.example.demo.util.SecurityUtil;
 import com.example.demo.util.annotation.ApiMessage;
 import com.example.demo.util.error.IdInvalidException;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/v1")
 public class AuthController {
@@ -66,14 +70,16 @@ public class AuthController {
 
         ResLoginDTO restLoginDTO = new ResLoginDTO();
 //        lấy API thông tin người nguười login
-        User currentUserDB = this.userService.handleGetUserByUserName(loginDTO.getUsername());
+        Optional<User> currentUserDB = this.userService.handleGetUserByUserName(loginDTO.getUsername());
+
         ResLoginDTO.UserLogin userLogin;
         if (currentUserDB != null) {
-            userLogin = new ResLoginDTO.UserLogin(
-                    currentUserDB.getId(),
-                    currentUserDB.getEmail(),
-                    currentUserDB.getName(),
-                    currentUserDB.getRole()
+            User user = currentUserDB.get();
+             userLogin = new ResLoginDTO.UserLogin(
+                    user.getId(),
+                    user.getEmail(),
+                    user.getName(),
+                    user.getRole()
 
             );
             restLoginDTO.setUser(userLogin);
@@ -103,14 +109,14 @@ public class AuthController {
     public ResponseEntity<ResLoginDTO.UserGetAccount> getAccount() {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ?
                 SecurityUtil.getCurrentUserLogin().get() : "";
-        User currentUser = this.userService.handleGetUserByUserName(email);
+        Optional<User> currentUser = this.userService.handleGetUserByUserName(email);
         ResLoginDTO.UserLogin userLogin= new ResLoginDTO.UserLogin();
         ResLoginDTO.UserGetAccount userGetAccount = new ResLoginDTO.UserGetAccount();
-        if(currentUser != null) {
-            userLogin.setId(currentUser.getId());
-            userLogin.setEmail(currentUser.getEmail());
-            userLogin.setName(currentUser.getName());
-            userLogin.setRole(currentUser.getRole());
+        if(currentUser.isPresent()) {
+            userLogin.setId(currentUser.get().getId());
+            userLogin.setEmail(currentUser.get().getEmail());
+            userLogin.setName(currentUser.get().getName());
+            userLogin.setRole(currentUser.get().getRole());
             userGetAccount.setUser(userLogin);
         }
         return ResponseEntity.ok(userGetAccount);
@@ -134,14 +140,14 @@ public class AuthController {
 //        issue new token/set refresh token as cookies
         ResLoginDTO restLoginDTO = new ResLoginDTO();
 //        lấy API thông tin người nguười login
-        User currentUserDB = this.userService.handleGetUserByUserName(email);
+        Optional<User> currentUserDB = this.userService.handleGetUserByUserName(email);
         ResLoginDTO.UserLogin userLogin;
-        if (currentUserDB != null) {
+        if (currentUserDB.isPresent()) {
             userLogin = new ResLoginDTO.UserLogin(
-                    currentUserDB.getId(),
-                    currentUserDB.getEmail(),
-                    currentUserDB.getName(),
-                    currentUserDB.getRole()
+                    currentUserDB.get().getId(),
+                    currentUserDB.get().getEmail(),
+                    currentUserDB.get().getName(),
+                    currentUserDB.get().getRole()
             );
             restLoginDTO.setUser(userLogin);
         }
@@ -212,5 +218,24 @@ public class AuthController {
        User registerUser = this.userService.saveUser(reqUser);
        return ResponseEntity.ok().body(this.userService.convertToRestCreateUserDTO(registerUser));
     }
+    @PostMapping("/auth/outbound/authentication")
+    @ApiMessage("login with gg")
+    public ResponseEntity<ResLoginDTO> outboundAuthentication( @RequestParam("code") String code) {
 
+        var result = securityUtil.outboundAuthenticate(code);
+
+        String refreshToken = securityUtil.createRefreshToken(result.getUser().getEmail(), result);
+        log.info("outbound authentication refresh token : {}", refreshToken);
+        this.userService.updateUserToken(refreshToken, result.getUser().getEmail());
+        ResponseCookie resCookie = ResponseCookie.from("refresh_token", refreshToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(refreshTokenExpiration)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE,resCookie.toString())
+                .body(result);
+    }
 }

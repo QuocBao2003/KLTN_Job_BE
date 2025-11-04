@@ -44,9 +44,12 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
         String[] whileList = {"/","/api/v1/auth/login","/api/v1/auth/refresh","/storage/**","/api/v1/auth/register","/v3/api-docs/**","/swagger-ui/**",
                 "/api/v1/auth/google", "/api/v1/auth/oauth2/callback/**", "/api/v1/auth/google/token",
-                "/api/v1/email/**","/api/v1/files","/api/v1/ask","/api/v1/auth/registerHR","/api/v1/save-jobs/{userId}","/api/v1/save-jobs/{jobId}"};
+                "/api/v1/auth/outbound/authentication","/ws/**","/app/**","/topic/**","/ws",
+                "/api/v1/email/**","/api/v1/files","/api/v1/chat-with-image","/api/v1/chat","/api/v1/auth/registerHR","/api/v1/save-jobs/{userId}","/api/v1/save-jobs/{jobId}"};
         http
                 .csrf(c->c.disable())
+
+                
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(
                 authz -> authz
@@ -54,6 +57,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET,"/api/v1/companies/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/jobs/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/skills/**").permitAll()
+                        .requestMatchers("/api/v1/chat/**").authenticated()
                         .anyRequest().authenticated()
                 )
 

@@ -1,13 +1,22 @@
 package com.example.demo.util;
 
 
+import com.example.demo.domain.User;
+import com.example.demo.dto.request.ExchangeTokenRequest;
 import com.example.demo.dto.response.ResLoginDTO;
-import com.nimbusds.jose.util.Base64;
+import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.httpclient.OutboundIndentityClient;
+import com.example.demo.repository.httpclient.OutboundUserClient;
+import com.example.demo.service.UserService;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
@@ -20,6 +29,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 
+@Slf4j
 @Service
 public class SecurityUtil
 {
@@ -27,14 +37,33 @@ public class SecurityUtil
     public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
     @Value("${demo.jwt.base64-secret}")
     private String jwtKey;
-
+    @Autowired
+    private OutboundIndentityClient  outboundIndentityClient;
     @Value("${demo.jwt.access-token-validity-in-seconds}")
     private long accessTokenExpiration;
 
     @Value("${demo.jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenExpiration;
+    @NonFinal
+    @Value("${outbound.indentity.client-id}")
+    protected String CLIENT_ID;
+    @NonFinal
+    @Value("${outbound.indentity.client-secret}")
+    protected String CLIENT_SECRET ;
+    @NonFinal
+    @Value("${outbound.indentity.redirect-uri}")
+    protected String REDIRECT_URL ;
+
+    @NonFinal
+    @Value("${outbound.indentity.grant-type}")
+    protected  String GRANT_TYPE ;
+   @Autowired
+    private OutboundUserClient outboundUserClient;
+   @Autowired
+   private UserRepository userRepository;
     public SecurityUtil(JwtEncoder jwtEncoder) {
         this.jwtEncoder = jwtEncoder;
+
     }
 //    create token
     public String createAccessToken(String email, ResLoginDTO resDTO){
@@ -81,7 +110,16 @@ public class SecurityUtil
         JwsHeader jwsHeader= JwsHeader.with(JWT_ALGORITHM).build();
         return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader,claims)).getTokenValue();
     }
-
+    public Jwt checkAccessToken(String token) {
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
+                getSecrectKey()).macAlgorithm(SecurityUtil.JWT_ALGORITHM).build();
+        try {
+            return jwtDecoder.decode(token);
+        } catch (Exception e) {
+            System.out.println("AccessToken error: " + e.getMessage());
+            throw e;
+        }
+    }
     public Jwt checkRefreshToken(String token){
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
                 getSecrectKey()).macAlgorithm(SecurityUtil.JWT_ALGORITHM).build();
@@ -93,7 +131,43 @@ public class SecurityUtil
             throw e;
         }
     }
+    public ResLoginDTO outboundAuthenticate(String code){
+        var response = outboundIndentityClient.exchangeToken(ExchangeTokenRequest.builder()
+                        .code(code)
+                        .clientId(CLIENT_ID)
+                        .clientSecret(CLIENT_SECRET)
+                        .redirectUri(REDIRECT_URL)
+                        .grantType(GRANT_TYPE)
+                .build());
+        var userInfo = outboundUserClient.getUserInfomation("Bearer " + response.getAccessToken());
+        log.info("User info: {}", userInfo);
 
+        var passwordEncoder = new BCryptPasswordEncoder();
+        String randomPassword = passwordEncoder.encode(UUID.randomUUID().toString());
+        var user = userRepository.findByEmail(userInfo.getEmail()).orElseGet(
+                () -> userRepository.save(User.builder()
+                                .email(userInfo.getEmail())
+                        .name(userInfo.getName())
+                                .password(randomPassword)
+                        .build())
+        );
+        ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin();
+        userLogin.setEmail(user.getEmail());
+        userLogin.setName(user.getName());
+        userLogin.setId(user.getId());
+        userLogin.setRole(user.getRole());
+        ResLoginDTO resDTO = ResLoginDTO.builder()
+                .user(userLogin)
+                .build();
+        String accessToken = createAccessToken(user.getEmail(), resDTO);
+        log.info("accessToken: {}", accessToken);
+//        String refreshToken = createRefreshToken(user.getEmail(), resDTO);
+//        log.info("refreshToken: {}", refreshToken);
+        return ResLoginDTO.builder()
+                .accessToken(accessToken)
+                .user(userLogin)
+                .build();
+    }
 
     private SecretKey getSecrectKey() {
         byte[] keyBytes = java.util.Base64.getDecoder().decode(jwtKey);
