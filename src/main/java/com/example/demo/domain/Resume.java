@@ -19,12 +19,16 @@ public class Resume {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
     @NotBlank(message = "email không được rỗng")
     private String email;
+
     @NotBlank(message = "url không được để trống (upload cv chưa thành công)")
     private String url;
+
     @Enumerated(EnumType.STRING)
     private ResumeStateEnum status;
+
     private Instant createdAt;
     private Instant updatedAt;
     private String createdBy;
@@ -38,12 +42,18 @@ public class Resume {
     @JoinColumn(name = "job_id")
     private Job job;
 
+    // ✨ THÊM MỚI: Liên kết với CV template đã dùng (optional)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cv_id")
+    private Cv cv;
+
     @PrePersist
     public void handleBeforeCreateAt(){
         this.createdAt=Instant.now();
         this.createdBy= SecurityUtil.getCurrentUserLogin().isPresent()?
-        SecurityUtil.getCurrentUserLogin().get() : "";
+                SecurityUtil.getCurrentUserLogin().get() : "";
     }
+
     @PreUpdate
     public void handelBeforeUpdateAt(){
         this.updatedAt=Instant.now();
