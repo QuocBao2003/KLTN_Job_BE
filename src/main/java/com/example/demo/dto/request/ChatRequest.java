@@ -1,4 +1,14 @@
 package com.example.demo.dto.request;
 
-public record ChatRequest(String message) {
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class ChatRequest {
+    private String message;
 }

@@ -2,12 +2,7 @@ package com.example.demo.controller;
 
 
 import com.example.demo.domain.MessageRoom;
-import com.example.demo.dto.request.BillItem;
-import com.example.demo.dto.request.ChatRequest;
-import com.example.demo.dto.request.ExpenseInfo;
-import com.example.demo.dto.request.FilmInfo;
 import com.example.demo.dto.response.MessageResponse;
-import com.example.demo.service.ChatService;
 
 import com.example.demo.service.MessageService;
 import com.example.demo.util.annotation.ApiMessage;
@@ -15,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;

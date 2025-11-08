@@ -37,7 +37,9 @@ public class Resume {
     @ManyToOne
     @JoinColumn(name = "job_id")
     private Job job;
-
+    @ManyToOne
+    @JoinColumn(name = "cv_id")
+    private Cv cv;
     @PrePersist
     public void handleBeforeCreateAt(){
         this.createdAt=Instant.now();

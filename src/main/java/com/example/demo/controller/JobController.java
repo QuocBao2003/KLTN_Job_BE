@@ -99,14 +99,14 @@ public class JobController {
         return ResponseEntity.ok(jobService.getAllJob(spec, pageable));
     }
 
-    @PreAuthorize("hasAuthority('Approve a Job')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
     @PutMapping("/jobs/{id}/approve")
     @ApiMessage("Approve job")
     public ResponseEntity<Void> approveJob(@PathVariable long id) {
         jobService.approveJob(id);
         return ResponseEntity.ok(null);
     }
-    @PreAuthorize("hasAuthority('Reject a Job')")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
     @PutMapping("/jobs/{id}/reject")
     @ApiMessage("Reject job")
     public ResponseEntity<Void> rejectJob(@PathVariable long id) {

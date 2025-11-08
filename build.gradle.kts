@@ -45,8 +45,11 @@ dependencies {
     implementation ("org.springframework.boot:spring-boot-starter-websocket")
     implementation ("org.springframework:spring-messaging")
     implementation("com.cloudinary:cloudinary-http44:1.37.0")
-
-
+    implementation("org.springframework.ai:spring-ai-pdf-document-reader") {
+        exclude(group = "org.apache.pdfbox")
+    }
+    implementation("org.apache.pdfbox:pdfbox:3.0.3")
+    implementation("org.apache.pdfbox:pdfbox-io:3.0.3")
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 }
 dependencyManagement {
@@ -57,4 +60,10 @@ dependencyManagement {
 }
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+configurations.all {
+    resolutionStrategy {
+        force("org.apache.pdfbox:pdfbox:3.0.3")
+        force("org.apache.pdfbox:pdfbox-io:3.0.3")
+    }
 }
