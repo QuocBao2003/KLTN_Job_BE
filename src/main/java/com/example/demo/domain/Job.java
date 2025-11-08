@@ -2,6 +2,7 @@ package com.example.demo.domain;
 
 
 
+import com.example.demo.util.Enum.JobStatus;
 import com.example.demo.util.Enum.LevelEnum;
 import com.example.demo.util.SecurityUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -36,9 +37,10 @@ public class Job {
     private LevelEnum level;
     @Column(columnDefinition = "MEDIUMTEXT")
     private String description;
+    @Enumerated(EnumType.STRING)
+    private JobStatus status=JobStatus.PENDING;
     private Instant startDate;
     private Instant endDate;
-    private boolean active;
     private Instant createdAt;
     private Instant updatedAt;
     private String createdBy;

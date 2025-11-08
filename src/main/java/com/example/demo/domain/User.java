@@ -28,11 +28,12 @@ public class User {
     @NotBlank(message = "password không được để trống")
     private String password;
     @NotBlank(message = "email không được để trống")
+    @Column(unique = true)
     private String email;
 
     @Enumerated(EnumType.STRING)
     private UserStatus status;
-    private LocalDateTime lastLogin = LocalDateTime.now();
+
     private String avatarUrl;
 
 
@@ -60,6 +61,7 @@ public class User {
 
     @ManyToOne
     @JoinColumn(name = "role_id")
+    @JsonIgnore
     private Role role;
 
 

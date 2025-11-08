@@ -3,12 +3,16 @@ package com.example.demo.service;
 import com.example.demo.domain.Company;
 import com.example.demo.domain.Job;
 import com.example.demo.domain.Skill;
+import com.example.demo.domain.User;
 import com.example.demo.dto.response.job.ResCreateJobDTO;
 import com.example.demo.dto.response.job.ResUpdateJobDTO;
 import com.example.demo.dto.response.ResultPaginationDTO;
 import com.example.demo.repository.CompanyRepository;
 import com.example.demo.repository.JobRepository;
 import com.example.demo.repository.SkillRepository;
+import com.example.demo.repository.UserRepository;
+import com.example.demo.util.Enum.JobStatus;
+import com.example.demo.util.SecurityUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,14 +27,25 @@ public class JobService {
     private final JobRepository jobRepository;
     private final SkillRepository skillRepository;
     private final CompanyRepository companyRepository;
-
-    public JobService(JobRepository jobRepository, SkillRepository skillRepository, CompanyRepository companyRepository) {
+    private final UserRepository userRepository;
+    public JobService(JobRepository jobRepository, SkillRepository skillRepository, CompanyRepository companyRepository, UserRepository userRepository) {
         this.jobRepository = jobRepository;
         this.skillRepository = skillRepository;
         this.companyRepository = companyRepository;
+        this.userRepository = userRepository;
     }
 
     public ResCreateJobDTO createJob(Job job) {
+        //check user
+        String currentLogin = SecurityUtil.getCurrentUserLogin().orElseThrow(()-> new RuntimeException("User not found"));
+        User hrUser =  userRepository.findByEmail(currentLogin).orElseThrow(()-> new RuntimeException("User not found"));
+        if(!hrUser.getRole().getName().equals("HR")){
+            throw new RuntimeException("User is not HR for Company");
+        }
+        job.setStatus(JobStatus.PENDING);
+        job.setCompany(hrUser.getCompany());
+
+
 //        ckeck skill
         if (job.getSkills() != null) {
             List<Long> reqskills = job.getSkills().stream()
@@ -41,14 +56,6 @@ public class JobService {
             job.setSkills(dbSkills);
 
             }
-
-//         check company
-        if(job.getCompany()!=null){
-            Optional<Company> companyOptional=this.companyRepository.findById(job.getCompany().getId());
-            if(companyOptional.isPresent()){
-                job.setCompany(companyOptional.get());
-            }
-        }
 
 //          create job
             Job currentJob = this.jobRepository.save(job);
@@ -61,7 +68,7 @@ public class JobService {
             rs.setLevel(currentJob.getLevel());
             rs.setStartDate(currentJob.getStartDate());
             rs.setEndDate(currentJob.getEndDate());
-            rs.setActive(currentJob.isActive());
+            rs.setStatus(currentJob.getStatus());
             rs.setCreatedAt(currentJob.getCreatedAt());
             rs.setCreatedBy(currentJob.getCreatedBy());
             if (currentJob.getSkills() != null) {
@@ -77,6 +84,7 @@ public class JobService {
         }
 
         public ResUpdateJobDTO updateJob(Job job,Job jobInDB) {
+
             if (job.getSkills() != null) {
                 List<Long> reqskills = job.getSkills().stream()
                         .map(x -> x.getId())
@@ -101,7 +109,7 @@ public class JobService {
             jobInDB.setLevel(job.getLevel());
             jobInDB.setStartDate(job.getStartDate());
             jobInDB.setEndDate(job.getEndDate());
-            jobInDB.setActive(job.isActive());
+
 //          update job
             Job currentJob = this.jobRepository.save(jobInDB);
 //          convert response
@@ -115,7 +123,7 @@ public class JobService {
             rs.setLevel(currentJob.getLevel());
             rs.setStartDate(currentJob.getStartDate());
             rs.setEndDate(currentJob.getEndDate());
-            rs.setActive(currentJob.isActive());
+
             rs.setUpdatedAt(currentJob.getUpdatedAt());
             rs.setUpdatedBy(currentJob.getUpdatedBy());
             if (currentJob.getSkills() != null) {
@@ -141,6 +149,18 @@ public class JobService {
             rs.setMeta(mt);
             rs.setResult(pagejob.getContent());
             return  rs;
+        }
+
+        public void approveJob(Long id){
+        Job job = this.jobRepository.findById(id).orElseThrow(()-> new RuntimeException("Job not found"));
+        job.setStatus(JobStatus.APPROVED);
+        this.jobRepository.save(job);
+        }
+
+        public void rejectJob(Long id){
+        Job job = this.jobRepository.findById(id).orElseThrow(()-> new RuntimeException("Job not found"));
+        job.setStatus(JobStatus.REJECTED);
+        this.jobRepository.save(job);
         }
     }
 

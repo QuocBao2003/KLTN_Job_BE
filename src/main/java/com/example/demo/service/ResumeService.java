@@ -97,6 +97,7 @@ public class ResumeService  {
         reqFetchResume.setCreatedBy(resume.getCreatedBy());
         reqFetchResume.setUpdatedAt(resume.getUpdatedAt());
         reqFetchResume.setUpdatedBy(resume.getUpdatedBy());
+        reqFetchResume.setLogo(resume.getJob().getCompany().getLogo());
         if(resume.getJob()!=null){
             reqFetchResume.setCompanyName(resume.getJob().getCompany().getName());
         }

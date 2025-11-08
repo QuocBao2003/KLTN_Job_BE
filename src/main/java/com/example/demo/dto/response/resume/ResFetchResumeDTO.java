@@ -26,6 +26,7 @@ public class ResFetchResumeDTO {
     private String companyName;
     private UserResume user;
     private JobResume job;
+    private String logo;
     @Getter
     @Setter
     @AllArgsConstructor
@@ -42,6 +43,7 @@ public class ResFetchResumeDTO {
     public static class JobResume{
         private long id;
         private String name;
+
     }
 }
 

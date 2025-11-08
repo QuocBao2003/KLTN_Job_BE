@@ -89,36 +89,39 @@ public class ResumeController {
     }
 
     @GetMapping("/resumes")
-    @ApiMessage("Fetch all resume with paginate")
+    @ApiMessage("Fetch all resumes with paginate")
     public ResponseEntity<ResultPaginationDTO> fetchAll(
             @Filter Specification<Resume> spec,
             Pageable pageable) {
 
-        List<Long> arrJobIds = null;
-        String email = SecurityUtil.getCurrentUserLogin().isPresent() == true
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-        Optional<User> currentUser = this.userService.handleGetUserByUserName(email);
-        if (currentUser.isPresent()) {
-            Company userCompany = currentUser.get().getCompany();
-            if (userCompany != null) {
-                List<Job> companyJobs = userCompany.getJobs();
-                if (companyJobs != null && companyJobs.size() > 0) {
-                    arrJobIds = companyJobs.stream().map(x -> x.getId())
-                            .collect(Collectors.toList());
-                }
+        User currentUser = userService.handleGetUserByUserName(
+                SecurityUtil.getCurrentUserLogin()
+                        .orElseThrow(() -> new RuntimeException("User not found"))
+        ).orElseThrow(() -> new RuntimeException("User not found"));
+
+        String role = currentUser.getRole().getName();
+
+        // Nếu HR => chỉ được xem resume của company mình quản lý
+        if (role.equalsIgnoreCase("HR")) {
+
+            Company userCompany = currentUser.getCompany();
+            if (userCompany == null) {
+                throw new RuntimeException("HR does not belong to any company");
             }
+
+            Specification<Resume> companyFilter = (root, query, cb) ->
+                    cb.equal(root.get("job").get("company").get("id"), userCompany.getId());
+
+            spec = (spec != null) ? spec.and(companyFilter) : companyFilter;
         }
 
-        Specification<Resume> jobInSpec = filterSpecificationConverter.convert(filterBuilder.field("job")
-                .in(filterBuilder.input(arrJobIds)).get());
 
-        Specification<Resume> finalSpec = jobInSpec.and(spec);
 
-        return ResponseEntity.ok().body(this.resumeService.fetchAllResume(finalSpec, pageable));
+
+        return ResponseEntity.ok(resumeService.fetchAllResume(spec, pageable));
     }
 
-    @PostMapping("/resumes/by-user")
+    @GetMapping("/resumes/by-user")
     @ApiMessage("Get list resumes by user")
     public ResponseEntity<ResultPaginationDTO> fetchResumeByUser(Pageable pageable) {
 

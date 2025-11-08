@@ -57,6 +57,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET,"/api/v1/companies/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/jobs/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/skills/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/resumes/by-user").authenticated()
                         .requestMatchers("/api/v1/chat/**").authenticated()
                         .anyRequest().authenticated()
                 )
@@ -104,7 +105,7 @@ public class SecurityConfiguration {
     public JwtAuthenticationConverter jwtAuthenticationConverter(){
         JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter= new JwtGrantedAuthoritiesConverter();
         grantedAuthoritiesConverter.setAuthorityPrefix("");
-        grantedAuthoritiesConverter.setAuthoritiesClaimName("permission");
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("role");
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);

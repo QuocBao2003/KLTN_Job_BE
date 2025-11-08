@@ -1,5 +1,6 @@
 package com.example.demo.dto.response.job;
 
+import com.example.demo.util.Enum.JobStatus;
 import com.example.demo.util.Enum.LevelEnum;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,7 +24,7 @@ public class ResCreateJobDTO {
 
     private Instant startDate;
     private Instant endDate;
-    private boolean isActive;
+    private JobStatus status;
 
     private List<String> skills;
 

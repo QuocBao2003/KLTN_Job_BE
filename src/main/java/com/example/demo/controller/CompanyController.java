@@ -3,9 +3,13 @@ package com.example.demo.controller;
 
 import com.example.demo.domain.Company;
 
+import com.example.demo.domain.User;
 import com.example.demo.dto.response.ResultPaginationDTO;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.service.CompanyService;
 import com.example.demo.service.FileService;
+import com.example.demo.service.UserService;
+import com.example.demo.util.SecurityUtil;
 import com.example.demo.util.annotation.ApiMessage;
 import com.example.demo.util.error.StorageException;
 import com.turkraft.springfilter.boot.Filter;
@@ -28,10 +32,11 @@ import java.util.Optional;
 @RequestMapping("/api/v1")
 public class CompanyController {
     private final CompanyService companyService;
-    private final FileService fileService;
-    public CompanyController(CompanyService companyService, FileService fileService) {
+    private final UserRepository userRepository;
+    public CompanyController(CompanyService companyService, FileService fileService, UserRepository userRepository) {
         this.companyService = companyService;
-        this.fileService = fileService;
+
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/companies")
@@ -42,20 +47,34 @@ public class CompanyController {
 
 
 
+    @GetMapping("/companies/role")
+    public ResponseEntity<ResultPaginationDTO> getAllCompaniesByRole(
+            @Filter Specification<Company> spec,
+            Pageable pageable
+    ) {
+        User currentUser = userRepository.findByEmail(
+                SecurityUtil.getCurrentUserLogin()
+                        .orElseThrow(() -> new RuntimeException("User not found"))
+        ).orElseThrow(() -> new RuntimeException("User not found"));
+
+
+        if (!currentUser.getRole().getName().equalsIgnoreCase("SUPER_ADMIN") ) {
+            Specification<Company> hrSpec = (root, query, cb) ->
+                    cb.equal(root.get("hr").get("id"), currentUser.getId());
+            spec = spec != null ? spec.and(hrSpec) : hrSpec;
+        }
+
+
+        ResultPaginationDTO result = companyService.findAll(spec, pageable);
+        return ResponseEntity.ok(result);
+    }
     @GetMapping("/companies")
     public ResponseEntity<ResultPaginationDTO> getAllCompanies(
-//            @RequestParam("current")Optional<String> currentOptional,
-//            @RequestParam("pageSize") Optional<String> pageSizeOptional
-            @Filter Specification<Company> spec, //tim kiem theo filter
-            Pageable pageable//phan trang, size
-            ) {
-//        String sCurrent=currentOptional.isPresent()? currentOptional.get():"";
-//        String sPageSiz=pageSizeOptional.isPresent()? pageSizeOptional.get():"";
-//        int current = Integer.parseInt(sCurrent);
-//        int pageSize =Integer.parseInt(sPageSiz);
-//        Pageable pageable= PageRequest.of(current-1,pageSize);
-
-        return ResponseEntity.status(HttpStatus.OK).body(companyService.findAllCompany(spec,pageable));
+            @Filter Specification<Company> spec,
+            Pageable pageable
+    ) {
+        ResultPaginationDTO result = companyService.findAll(spec, pageable);
+        return ResponseEntity.ok(result);
     }
 
     @PutMapping("/companies")
@@ -66,14 +85,14 @@ public class CompanyController {
 
     @DeleteMapping("/companies/{id}")
     public ResponseEntity<Void> deleteCompany(@PathVariable("id") Long id) {
-        companyService.deleteCCompany(id);
+        companyService.deleteCompany(id);
         return ResponseEntity.ok(null);
 
     }
     @GetMapping("/companies/{id}")
     @ApiMessage("get company by id")
     public ResponseEntity<Company> fetchCompanyById(@PathVariable("id") long id){
-        Optional<Company> reqCompany = this.companyService.findById(id);
-        return ResponseEntity.ok(reqCompany.get());
+        Company reqCompany = this.companyService.findById(id);
+        return ResponseEntity.ok(reqCompany);
     }
 }

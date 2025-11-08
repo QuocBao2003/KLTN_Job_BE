@@ -61,6 +61,8 @@ public class SaveJobService {
                 job.getName(),
                 company != null ? company.getName() : null,
                 job.getLocation(),
+                company != null ? company.getLogo() : null,
+
                 saved.getSaveTime()
         );
     }
@@ -82,7 +84,9 @@ public class SaveJobService {
                     job.getId(),
                     job.getName(),
                     company != null ? company.getName() : null,
+
                     job.getLocation(),
+                    company != null ? company.getLogo() : null,
                     save.getSaveTime()
             );
         }).collect(Collectors.toList());

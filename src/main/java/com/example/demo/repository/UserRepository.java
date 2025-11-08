@@ -22,4 +22,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     // Tìm Hr của công ty
     @Query("SELECT u FROM User u WHERE u.company.id = :companyId AND u.role.name = :roleName")
     Optional<User> findByCompanyIdAndRoleName(Long companyId, String roleName);
+
+    boolean existsByEmail(String email);
 }

@@ -41,7 +41,10 @@ public class Company {
     @OneToMany(mappedBy = "company",fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Job> jobs;
-
+    @ManyToOne
+    @JoinColumn(name = "hr_id")
+    @JsonIgnore
+    private User hr;
     @PrePersist
     public void handleBeforeCreateAt(){
       this.createdBy= SecurityUtil.getCurrentUserLogin().isPresent()==true ?
