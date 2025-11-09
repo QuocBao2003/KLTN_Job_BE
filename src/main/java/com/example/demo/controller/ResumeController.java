@@ -98,9 +98,9 @@ public class ResumeController {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() == true
                 ? SecurityUtil.getCurrentUserLogin().get()
                 : "";
-        User currentUser = this.userService.handleGetUserByUserName(email);
-        if (currentUser != null) {
-            Company userCompany = currentUser.getCompany();
+        Optional<User> currentUser = this.userService.handleGetUserByUserName(email);
+        if (currentUser.isPresent()) {
+            Company userCompany = currentUser.get().getCompany();
             if (userCompany != null) {
                 List<Job> companyJobs = userCompany.getJobs();
                 if (companyJobs != null && companyJobs.size() > 0) {

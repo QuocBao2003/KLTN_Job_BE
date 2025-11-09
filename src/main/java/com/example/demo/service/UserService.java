@@ -3,10 +3,7 @@ package com.example.demo.service;
 import com.example.demo.domain.Company;
 import com.example.demo.domain.Role;
 import com.example.demo.domain.User;
-import com.example.demo.dto.response.ResCreateUserDTO;
-import com.example.demo.dto.response.ResUpdateUserDTO;
-import com.example.demo.dto.response.ResUserDTO;
-import com.example.demo.dto.response.ResultPaginationDTO;
+import com.example.demo.dto.response.*;
 import com.example.demo.repository.CompanyRepository;
 import com.example.demo.repository.UserRepository;
 
@@ -58,7 +55,7 @@ public class UserService {
         }
         return null;
     }
-    public User getUserByEmail(String email) {
+    public Optional<User> getUserByEmail(String email) {
         return  this.userRepository.findByEmail(email);
     }
     public ResultPaginationDTO getAllUsers(Specification<User> spec, Pageable pageable)
@@ -103,7 +100,7 @@ public class UserService {
         return currentUser;
     }
 
-    public User handleGetUserByUserName(String userName) {
+    public Optional<User> handleGetUserByUserName(String userName) {
         return userRepository.findByEmail(userName);
     }
     public boolean isEmailExist(String email) {
@@ -171,10 +168,11 @@ public class UserService {
     }
 
     public void updateUserToken(String token,String email){
-        User currentUser = this.handleGetUserByUserName(email);
-        if(currentUser != null) {
-            currentUser.setRefreshToken(token);
-            this.userRepository.save(currentUser);
+        Optional<User> currentUser = this.handleGetUserByUserName(email);
+        if(currentUser.isPresent()) {
+            User user = currentUser.get();
+            user.setRefreshToken(token);
+            this.userRepository.save(user);
         }
     }
 

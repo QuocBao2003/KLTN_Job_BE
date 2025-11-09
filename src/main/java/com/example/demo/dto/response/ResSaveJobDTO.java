@@ -18,6 +18,7 @@ public class ResSaveJobDTO {
     private Long id;
     private String name;
     private String companyName;
+    private String location ;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDateTime saveTime;
 }

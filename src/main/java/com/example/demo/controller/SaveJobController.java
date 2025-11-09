@@ -19,10 +19,10 @@ public class SaveJobController {
     }
 
 
-    @GetMapping("/{userId}")
+    @GetMapping()
     @ApiMessage("Get all saved jobs of user")
-    public ResponseEntity<List<ResSaveJobDTO>> getSavedJobs(@PathVariable Long userId) throws Exception {
-        List<ResSaveJobDTO> jobs = saveJobService.getAllSavejobByUser(userId);
+    public ResponseEntity<List<ResSaveJobDTO>> getSavedJobs() throws Exception {
+        List<ResSaveJobDTO> jobs = saveJobService.getAllSavejobByUser();
         return ResponseEntity.ok(jobs);
     }
 

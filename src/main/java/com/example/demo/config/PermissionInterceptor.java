@@ -16,6 +16,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
 
 import java.util.List;
+import java.util.Optional;
 
 //Request -> Secutiry->Interceptor -> Controller ->Service
 public class PermissionInterceptor implements HandlerInterceptor {
@@ -37,7 +38,12 @@ public class PermissionInterceptor implements HandlerInterceptor {
 //        check  permission để được di tiếp sang controller
         String email = SecurityUtil.getCurrentUserLogin().isEmpty() == true ?SecurityUtil.getCurrentUserLogin().get() : "";
         if(email != null && !email.isEmpty()){
-            User user = this.userService.handleGetUserByUserName(email);
+            Optional<User> userOpt = this.userService.handleGetUserByUserName(email);
+            if (userOpt.isEmpty()) {
+                throw new PermissionExceeption("Không tìm thấy người dùng");
+            }
+
+            User user = userOpt.get();
             if(user!=null){
                 Role role = user.getRole();
                 if(role!=null){
