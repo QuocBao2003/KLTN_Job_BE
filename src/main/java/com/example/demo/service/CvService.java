@@ -66,7 +66,7 @@ public class CvService {
         // Lấy user hiện tại nếu đã login
         Optional<String> currentUserLogin = SecurityUtil.getCurrentUserLogin();
         if (currentUserLogin.isPresent()) {
-            User user = userRepository.findByEmail(currentUserLogin.get());
+            User user = userRepository.findByEmail(currentUserLogin.get()).orElse(null);
             if (user != null) {
                 cv.setUser(user);
             }

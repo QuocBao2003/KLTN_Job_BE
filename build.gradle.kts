@@ -46,6 +46,8 @@ dependencies {
     implementation ("org.springframework:spring-messaging")
     implementation("com.cloudinary:cloudinary-http44:1.37.0")
 
+    implementation("org.apache.poi:poi:5.2.3")
+    implementation("org.apache.poi:poi-ooxml:5.2.3")
 
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 }
