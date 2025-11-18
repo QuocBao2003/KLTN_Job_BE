@@ -43,7 +43,7 @@ public class SecurityConfiguration {
         @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
         String[] whileList = {"/","/api/v1/auth/login","/api/v1/auth/refresh","/storage/**","/api/v1/auth/register","/v3/api-docs/**","/swagger-ui/**",
-                "/api/v1/auth/google", "/api/v1/auth/oauth2/callback/**", "/api/v1/auth/google/token",
+                "/api/v1/auth/google", "/api/v1/auth/oauth2/callback/**", "/api/v1/auth/google/token","/api/v1/jobs/company/{companyId}","/api/v1/jobs/company/{companyId}/count",
                 "/api/v1/auth/outbound/authentication","/ws/**","/app/**","/topic/**","/ws","/api/v1/messageAi","/api/v1/fileAi",
                 "/api/v1/email/**","/api/v1/files","/api/v1/chat-with-image","/api/v1/chat","/api/v1/auth/registerHR","/api/v1/save-jobs/{userId}","/api/v1/save-jobs/{jobId}"};
         http
@@ -59,6 +59,10 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET,"/api/v1/skills/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/resumes/by-user").authenticated()
                         .requestMatchers("/api/v1/chat/**").authenticated()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/notifications/all").authenticated()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/notifications/count").authenticated()
+                        .requestMatchers(HttpMethod.PUT,"/api/v1/notifications/{id}/read").authenticated()
+                        .requestMatchers(HttpMethod.PUT,"/api/v1/notifications/mark-all-viewed").authenticated()
                         .anyRequest().authenticated()
                 )
 

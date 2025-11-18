@@ -14,59 +14,67 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/skills")
 public class SkillController {
     private final SkillService skillService;
-    private final SkillRepository skillRepository;
 
-    public SkillController(SkillService skillService, SkillRepository skillRepository) {
+    public SkillController(SkillService skillService) {
         this.skillService = skillService;
-        this.skillRepository = skillRepository;
     }
 
-    @PostMapping("/skills")
-    @ApiMessage("Create a new skill")
-    public ResponseEntity<Skill> handleCreateSkill(@Valid @RequestBody Skill skill) throws IdInvalidException {
-        if(skill.getName() != null && this.skillService.isNameExit(skill.getName())) {
-            throw new IdInvalidException("Skill đã tồn tại");
-        }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(this.skillService.handleSaveSkill(skill));
+    @PostMapping
+    @ApiMessage("Create a new skill under a Job Profession")
+    public ResponseEntity<Skill> createSkill(
+            @Valid @RequestBody Skill skill,
+            @RequestParam Long professionId) {
+        Skill created = skillService.create(skill, professionId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @PutMapping("/skills")
+
+    @PutMapping("/{id}")
     @ApiMessage("Update skill")
-    public ResponseEntity<Skill> handleUpdateSkill(@Valid @RequestBody Skill skill) throws IdInvalidException {
-        Skill currentSkill =this.skillService.getSkillById(skill.getId());
-        if(currentSkill == null){
-            throw new IdInvalidException("skill id"+skill.getId()+"không tồn tại");
-        }
-        if(skill.getName() != null && this.skillService.isNameExit(skill.getName())) {
-            throw  new IdInvalidException("Skill name"+skill.getName()+"đã tồn tại");
-        }
-        currentSkill.setName(skill.getName());
-        return ResponseEntity.ok(this.skillService.updateSkill(currentSkill));
+    public ResponseEntity<Skill> updateSkill(
+            @PathVariable Long id,
+            @Valid @RequestBody Skill skill) {
+        Skill updated = skillService.update(id, skill);
+        return ResponseEntity.ok(updated);
     }
 
-    @GetMapping("/skills")
-    @ApiMessage("fetch all skill")
+
+    @DeleteMapping("/{id}")
+    @ApiMessage("Delete a skill")
+    public ResponseEntity<Void> deleteSkill(@PathVariable Long id) {
+        skillService.delete(id);
+        return ResponseEntity.ok().build();
+    }
+
+    // Get Skill by Id
+    @GetMapping("/{id}")
+    @ApiMessage("Get skill by Id")
+    public ResponseEntity<Skill> getSkillById(@PathVariable Long id) {
+        Skill skill = skillService.getById(id);
+        return ResponseEntity.ok(skill);
+    }
+
+    // Get all Skills (paginate + filter)
+    @GetMapping
+    @ApiMessage("Fetch all skills with pagination and filter")
     public ResponseEntity<ResultPaginationDTO> getAllSkills(
             @Filter Specification<Skill> spec,
-            Pageable pageable
-            ){
-        return ResponseEntity.status(HttpStatus.OK).body(this.skillService.getAllSkill(spec,pageable));
+            Pageable pageable) {
+        ResultPaginationDTO rs = skillService.getAll(spec, pageable);
+        return ResponseEntity.ok(rs);
     }
-
-    @DeleteMapping("/skills/{id}")
-    @ApiMessage("Delete a skill")
-    public ResponseEntity<Void> deleteSkillById(@PathVariable("id") long id) throws IdInvalidException {
-        Skill currentSkill = this.skillService.getSkillById(id);
-        if(currentSkill == null){
-            throw new IdInvalidException("Skill id"+id+"không tồn tại");
-        }
-        this.skillService.deleteSkillById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(null);
+    @GetMapping("/by-profession/{professionId}")
+    @ApiMessage("Get skills by Job Profession")
+    public ResponseEntity<List<Skill>> getSkillsByProfession(@PathVariable Long professionId) {
+        List<Skill> skills = skillService.getByProfessionId(professionId);
+        return ResponseEntity.ok(skills);
     }
 }

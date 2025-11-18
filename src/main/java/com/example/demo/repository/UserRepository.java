@@ -24,4 +24,5 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Optional<User> findByCompanyIdAndRoleName(Long companyId, String roleName);
 
     boolean existsByEmail(String email);
+    List<User> findByRole_Name(String roleName);
 }

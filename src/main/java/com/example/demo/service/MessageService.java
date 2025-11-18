@@ -6,7 +6,8 @@ import com.example.demo.domain.MessageContent;
 import com.example.demo.domain.MessageRoom;
 import com.example.demo.domain.User;
 import com.example.demo.dto.request.MessageRequest;
-import com.example.demo.dto.response.MessageResponse;
+import com.example.demo.dto.response.message.MessageResponse;
+import com.example.demo.dto.response.message.MessageRoomDTO;
 import com.example.demo.repository.JobRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.message.MessageContentRepository;
@@ -20,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,7 +30,7 @@ public class MessageService {
     private final MessageRoomRepository messageRoomRepository;
     private final MessageContentRepository messageContentRepository;
     private final UserRepository userRepository;
-    private final JobRepository jobRepository; // Nếu có bảng Job
+    private final JobRepository jobRepository;
 
     public MessageRoom getOrCreateRoomByJob(Long jobId, Long otherUserId) {
         String currentUserEmail = SecurityUtil.getCurrentUserLogin()
@@ -42,7 +42,6 @@ public class MessageService {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found"));
 
-        // ⚡️ Kiểm tra role
         String currentRoleName = (currentUser.getRole() != null)
                 ? currentUser.getRole().getName()
                 : null;
@@ -50,7 +49,6 @@ public class MessageService {
         User candidateUser;
         User employerUser;
 
-        // 🧑‍💼 Nếu là HR → nhắn cho ứng viên
         if ("HR".equalsIgnoreCase(currentRoleName)) {
             employerUser = currentUser;
             if (otherUserId == null) {
@@ -59,7 +57,6 @@ public class MessageService {
             candidateUser = userRepository.findById(otherUserId)
                     .orElseThrow(() -> new RuntimeException("Ứng viên không tồn tại"));
         } else {
-            // 🧍 Nếu là ứng viên (role == null hoặc khác HR)
             candidateUser = currentUser;
             employerUser = userRepository.findByCompanyIdAndRoleName(
                             job.getCompany().getId(), "HR")
@@ -67,7 +64,6 @@ public class MessageService {
                             "Công ty này chưa có HR. Vui lòng liên hệ admin"));
         }
 
-        // 🔄 Kiểm tra phòng chat có sẵn chưa
         return messageRoomRepository
                 .findByCandidateIdAndEmployerIdAndJobId(
                         candidateUser.getId(), employerUser.getId(), jobId)
@@ -76,6 +72,8 @@ public class MessageService {
                             .candidate(candidateUser)
                             .employer(employerUser)
                             .job(job)
+                            .candidateUnreadCount(0)
+                            .employerUnreadCount(0)
                             .build();
                     return messageRoomRepository.save(room);
                 });
@@ -98,6 +96,20 @@ public class MessageService {
                 .build();
 
         message = messageContentRepository.save(message);
+
+        room.setLastMessage(request.getContent());
+        room.setLastMessageTime(message.getDateSent());
+        room.setLastSenderId(currentUser.getId());
+
+        // Nếu sender là candidate → tăng employerUnreadCount
+        if (currentUser.getId().equals(room.getCandidate().getId())) {
+            room.setEmployerUnreadCount(room.getEmployerUnreadCount() + 1);
+        } else {
+            // Nếu sender là employer → tăng candidateUnreadCount
+            room.setCandidateUnreadCount(room.getCandidateUnreadCount() + 1);
+        }
+
+        messageRoomRepository.save(room);
 
         return MessageResponse.builder()
                 .id(message.getId())
@@ -123,7 +135,7 @@ public class MessageService {
                         .build())
                 .toList();
     }
-    public List<MessageRoom> getMyRooms() {
+    public List<MessageRoomDTO> getMyRooms() {
         String currentEmail = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new RuntimeException("Bạn chưa đăng nhập"));
 
@@ -138,10 +150,101 @@ public class MessageService {
             throw new RuntimeException("User chưa có role");
         }
 
-        if (roleName == null || !"HR".equalsIgnoreCase(roleName)) {
-            return messageRoomRepository.findByCandidateId(currentUser.getId());
+        List<MessageRoom> rooms;
+        if ("HR".equalsIgnoreCase(roleName)) {
+            rooms = messageRoomRepository.findByEmployerIdOrderByLastMessageTimeDesc(currentUser.getId());
+        } else {
+            rooms = messageRoomRepository.findByCandidateIdOrderByLastMessageTimeDesc(currentUser.getId());
         }
 
-        return messageRoomRepository.findByEmployerId(currentUser.getId());
+        // Map sang DTO với thông tin đầy đủ
+        return rooms.stream()
+                .map(room -> {
+                    boolean isHR = "HR".equalsIgnoreCase(roleName);
+                    User otherUser = isHR ? room.getCandidate() : room.getEmployer();
+                    int unreadCount = isHR ? room.getEmployerUnreadCount() : room.getCandidateUnreadCount();
+
+                    return MessageRoomDTO.builder()
+                            .id(room.getId())
+                            .jobId(room.getJob().getId())
+                            .jobName(room.getJob().getName())
+                            .companyName(room.getJob().getCompany().getName())
+                            .otherUserId(otherUser.getId())
+                            .otherUserName(otherUser.getName())
+                            .otherUserEmail(otherUser.getEmail())
+                            .otherUserAvatar(otherUser.getAvatarUrl())
+                            .lastMessage(room.getLastMessage())
+                            .lastMessageTime(room.getLastMessageTime())
+                            .lastSenderId(room.getLastSenderId())
+                            .unreadCount(unreadCount)
+                            .createdDate(room.getCreatedDate())
+                            .build();
+                })
+                .toList();
+    }
+    // ✅ Đếm số lượng PHÒNG có tin nhắn chưa đọc (số người gửi)
+    public Integer getUnreadRoomCount() {
+        String currentEmail = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new RuntimeException("Bạn chưa đăng nhập"));
+
+        User currentUser = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+        String roleName = (currentUser.getRole() != null)
+                ? currentUser.getRole().getName()
+                : null;
+
+        if (!"HR".equalsIgnoreCase(roleName)) {
+            // User (candidate) - đếm số phòng có employerUnreadCount > 0
+            return messageRoomRepository.countRoomsWithUnreadForCandidate(currentUser.getId());
+        } else {
+            // HR (employer) - đếm số phòng có candidateUnreadCount > 0
+            return messageRoomRepository.countRoomsWithUnreadForEmployer(currentUser.getId());
+        }
+    }
+    @Transactional
+    public void resetAllUnreadCounts() {
+        String currentEmail = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new RuntimeException("Bạn chưa đăng nhập"));
+
+        User currentUser = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+        String roleName = (currentUser.getRole() != null)
+                ? currentUser.getRole().getName()
+                : null;
+
+        if (!"HR".equalsIgnoreCase(roleName)) {
+            // User (candidate) → reset tất cả candidateUnreadCount về 0
+            messageRoomRepository.resetCandidateUnreadCount(currentUser.getId());
+        } else {
+            // HR (employer) → reset tất cả employerUnreadCount về 0
+            messageRoomRepository.resetEmployerUnreadCount(currentUser.getId());
+        }
+    }
+
+    // ✅ Đánh dấu đã đọc khi vào 1 room cụ thể (giữ lại nếu cần)
+    @Transactional
+    public void markRoomAsRead(UUID roomId) {
+        String currentEmail = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new RuntimeException("Bạn chưa đăng nhập"));
+
+        User currentUser = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+        MessageRoom room = messageRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Phòng chat không tồn tại"));
+
+        String roleName = (currentUser.getRole() != null)
+                ? currentUser.getRole().getName()
+                : null;
+
+        if (!"HR".equalsIgnoreCase(roleName)) {
+            room.setCandidateUnreadCount(0);
+        } else {
+            room.setEmployerUnreadCount(0);
+        }
+
+        messageRoomRepository.save(room);
     }
 }

@@ -37,7 +37,6 @@ public class User {
     private String avatarUrl;
 
 
-
     @Enumerated(EnumType.STRING)
     private GenderEnum gender;
     private String address;
@@ -51,11 +50,11 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "company_id")
     private Company company;
-    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Resume> resumes;
 
-    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Savejob> savejobs;
 
@@ -67,7 +66,7 @@ public class User {
 
     @PrePersist
     public void handleBeforeCreate() {
-        this.createdBy= SecurityUtil.getCurrentUserLogin().isPresent() ?
+        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent() ?
                 SecurityUtil.getCurrentUserLogin().get() : "";
         this.createdAt = Instant.now();
     }
@@ -75,7 +74,7 @@ public class User {
     @PreUpdate
     public void handleBeforeUpdate() {
         this.updatedAt = Instant.now();
-        this.updatedBy=SecurityUtil.getCurrentUserLogin().isPresent()?
+        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent() ?
                 SecurityUtil.getCurrentUserLogin().get() : "";
     }
 }

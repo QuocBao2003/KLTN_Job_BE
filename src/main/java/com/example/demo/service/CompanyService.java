@@ -112,32 +112,7 @@ public class CompanyService {
 
         this.companyRepository.deleteById(id);
     }
-//    public Company findById(long id) {
-//        User currentUser = userRepository.findByEmail(
-//                SecurityUtil.getCurrentUserLogin()
-//                        .orElseThrow(() -> new RuntimeException("User not found"))
-//        ).orElseThrow(() -> new RuntimeException("User not found"));
-//
-//        Company company = companyRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Company not found"));
-//
-//        // Admin xem tất cả
-//        if(currentUser.getRole().getName().equalsIgnoreCase("ADMIN")) {
-//            return company;
-//        }
-//
-//        // HR chỉ xem company của mình
-//        if(currentUser.getRole().getName().equalsIgnoreCase("HR")) {
-//            if(!company.getHr().getId().equals(currentUser.getId())) {
-//                throw new RuntimeException("You don't have permission to view this company");
-//            }
-//            return company;
-//        }
-//
-//
-//
-//        throw new RuntimeException("You don't have permission to view this company");
-//    }
+
     public Company findById(Long id) {
         return companyRepository.findById(id).orElseThrow(()-> new RuntimeException("Company not found"));
     }

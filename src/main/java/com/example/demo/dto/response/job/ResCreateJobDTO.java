@@ -2,6 +2,7 @@ package com.example.demo.dto.response.job;
 
 import com.example.demo.util.Enum.JobStatus;
 import com.example.demo.util.Enum.LevelEnum;
+import com.example.demo.util.Enum.SalaryTypeEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,7 +17,9 @@ public class ResCreateJobDTO {
 
     private String location;
 
-    private double salary;
+    private Double minSalary;
+    private Double maxSalary;
+    private SalaryTypeEnum salaryType;
 
     private int quantity;
 
@@ -27,7 +30,7 @@ public class ResCreateJobDTO {
     private JobStatus status;
 
     private List<String> skills;
-
+    private String jobProfessionName;
     private Instant createdAt;
     private String createdBy;
 }

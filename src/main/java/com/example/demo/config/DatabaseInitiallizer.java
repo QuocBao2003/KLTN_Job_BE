@@ -90,9 +90,29 @@ public class DatabaseInitiallizer implements CommandLineRunner
             arr.add(new Permission("Reject a Job", "/api/v1/jobs/{id}/reject", "PUT", "JOBS"));
 
             arr.add(new Permission("Create a skill", "/api/v1/skills", "POST", "SKILLS"));
-            arr.add(new Permission("Update a skill", "/api/v1/skills", "PUT", "SKILLS"));
+            arr.add(new Permission("Update a skill", "/api/v1/skills/{id}", "PUT", "SKILLS"));
             arr.add(new Permission("Delete a skill", "/api/v1/skills/{id}", "DELETE", "SKILLS"));
             arr.add(new Permission("Get skill with pagination", "/api/v1/skills", "GET", "SKILLS"));
+
+
+            arr.add(new Permission("Create a JobProfession","/api/v1/job_professions", "POST", "JOBPROFESSIONS"));
+            arr.add(new Permission("Update a JobProfession", "/api/v1/job_professions", "PUT", "JOBPROFESSIONS"));
+            arr.add(new Permission("Get a JobProfession","/api/v1/job_professions/{id}","GET", "JOBPROFESSIONS"));
+            arr.add(new Permission("Delete a JobProfession","/api/v1/job_professions/{id}","DELETE", "JOBPROFESSIONS"));
+            arr.add(new Permission("Get all JobProfessions", "/api/v1/job_professions", "GET", "JOBPROFESSIONS"));
+
+            arr.add(new Permission(
+                    "View HR Statistics",
+                    "/api/v1/statistics/hr",
+                    "GET",
+                    "STATISTICS"
+            ));
+            arr.add(new Permission(
+                    "View Admin Statistics",
+                    "/api/v1/statistics/admin",
+                    "GET",
+                    "STATISTICS"
+            ));
 
             this.permissionRepository.saveAll(arr);
         }

@@ -201,6 +201,8 @@ public class AuthController {
         }
         String hassPassword = this.passwordEncoder.encode(reqUser.getPassword());
         reqUser.setPassword(hassPassword);
+        Role hr = roleService.findByName("USER");
+        reqUser.setRole(hr);
         User registerUser = this.userService.saveUser(reqUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.convertToRestCreateUserDTO(registerUser));
     }
