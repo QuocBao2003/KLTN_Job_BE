@@ -80,7 +80,7 @@ public class Job {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_profession_id")
-    @JsonIgnore
+    @JsonIgnoreProperties({"skills", "jobs", "createdAt", "updatedAt", "createdBy", "updatedBy"})
     private JobProfession jobProfession;
     @PrePersist
     public void handleBeforeCreateAt(){

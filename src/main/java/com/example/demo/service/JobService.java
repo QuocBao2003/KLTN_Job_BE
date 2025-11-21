@@ -285,7 +285,7 @@ public class JobService {
         notificationService.notifyJobReject(job);
     }
 
-    public Page<ResCreateJobDTO> getAllJobByCompanyAndStatus(Long companyId,  Pageable pageable) {
+    public Page<ResCreateJobDTO> getAllJobByCompanyAndStatus(long companyId,  Pageable pageable) {
         companyRepository.findById(companyId).orElseThrow(() -> new RuntimeException("Company not found"));
         Page<Job> jobPage = jobRepository.findByCompanyIdAndStatus(companyId, JobStatus.APPROVED, pageable);
         return jobPage.map(job -> convertToResCreateJobDTO(job));
@@ -294,6 +294,11 @@ public class JobService {
     }
     public long countApprovedJobsByCompany(Long companyId) {
         return jobRepository.countByCompanyIdAndStatus(companyId, JobStatus.APPROVED);
+    }
+    public Page<Job> getByJobProfessionAndStatus(Long jobProfessionId,Pageable pageable) {
+        jobProfessionRepository.findById(jobProfessionId).orElseThrow(() -> new RuntimeException("Job Profession not found"));
+        Page<Job> jobPage = jobRepository.findByJobProfessionIdAndStatus(jobProfessionId, JobStatus.APPROVED, pageable);
+        return jobPage;
     }
     }
 

@@ -84,6 +84,11 @@ public class JobController {
         spec = spec != null ? spec.and(approved) : approved;
         return ResponseEntity.ok(this.jobService.getAllJob(spec,pageable));
     }
+    @GetMapping("/jobs/jobProfession/{jobProfessionId}")
+    @ApiMessage("Get job by profession")
+    public ResponseEntity<Page<Job>> getJobByJobProfesionAndStatus(@PathVariable("jobProfessionId") long jobProfessionId,Pageable pageable){
+        return ResponseEntity.ok(jobService.getByJobProfessionAndStatus(jobProfessionId,pageable));
+    }
     @GetMapping("/jobs/role")
     @ApiMessage("Job map Role")
     public ResponseEntity<ResultPaginationDTO> getAllJobsMapByRole(

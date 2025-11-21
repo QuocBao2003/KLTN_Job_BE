@@ -23,6 +23,8 @@ public interface JobRepository extends JpaRepository<Job,Long> {
 //    tìm danh sách công việc chứa skill
     List<Job> findBySkillsIn(List<Skill> skills);
 
+    @Query("SELECT j from Job as j where j.jobProfession.id = :jobProfessionId and j.status=:jobStatus")
+    Page<Job> findByJobProfessionIdAndStatus(@Param("jobProfessionId") Long jobProfessionId, @Param("jobStatus") JobStatus jobStatus, Pageable pageable);
 
     @Query("""
         SELECT DISTINCT j FROM Job j
