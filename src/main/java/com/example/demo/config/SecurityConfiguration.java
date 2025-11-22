@@ -53,6 +53,8 @@ public class SecurityConfiguration {
                         .requestMatchers(whileList).permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/companies/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/jobs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/jobs_professions/**").permitAll()
+
                         .requestMatchers(HttpMethod.GET,"/api/v1/skills/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/submit-cv").authenticated()
                         .requestMatchers(HttpMethod.GET,"/api/v1/cvs/**").authenticated()

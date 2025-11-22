@@ -63,7 +63,7 @@ public class JobController {
     public ResponseEntity<ResultPaginationDTO> getAllJobs(
             @Filter Specification<Job> spec,
             Pageable pageable
-            ){
+    ){
         return ResponseEntity.ok(this.jobService.getAllJob(spec,pageable));
     }
 
