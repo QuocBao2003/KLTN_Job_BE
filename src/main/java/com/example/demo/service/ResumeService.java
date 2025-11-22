@@ -10,38 +10,44 @@ import com.example.demo.dto.response.resume.ResUpdateResumeDTO;
 import com.example.demo.repository.JobRepository;
 import com.example.demo.repository.ResumeRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.util.Enum.ResumeStateEnum;
 import com.example.demo.util.SecurityUtil;
 import com.turkraft.springfilter.builder.FilterBuilder;
 import com.turkraft.springfilter.converter.FilterSpecification;
 import com.turkraft.springfilter.converter.FilterSpecificationConverter;
 import com.turkraft.springfilter.parser.FilterParser;
 import com.turkraft.springfilter.parser.node.FilterNode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class ResumeService  {
     private final ResumeRepository resumeRepository;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
+    private final NotificationService notificationService;
     @Autowired
    FilterBuilder filterBuilder;
     @Autowired
     private  FilterParser filterParser;
     @Autowired
     private  FilterSpecificationConverter filterSpecificationConverter;
-    public ResumeService(ResumeRepository resumeRepository, UserRepository userRepository, JobRepository jobRepository ) {
+    public ResumeService(ResumeRepository resumeRepository, UserRepository userRepository, JobRepository jobRepository, NotificationService notificationService) {
         this.resumeRepository = resumeRepository;
         this.userRepository = userRepository;
         this.jobRepository = jobRepository;
 
+        this.notificationService = notificationService;
     }
 
     public boolean checkResumeExistsByUserAndJob(Resume resume){
@@ -65,19 +71,39 @@ public class ResumeService  {
     }
 
     public ResCreateResumeDTO createResume(Resume resume){
-        resume=this.resumeRepository.save(resume);
+        resume = this.resumeRepository.save(resume);
+        Long resumeId = resume.getId();
+
+        // ✅ Gọi ASYNC - chạy trong thread riêng
+        notificationService.notifyResumeCreatedAsync(resumeId);
+
         ResCreateResumeDTO rs = new ResCreateResumeDTO();
         rs.setId(resume.getId());
         rs.setCreatedAt(resume.getCreatedAt());
         rs.setCreatedBy(resume.getCreatedBy());
+
         return rs;
     }
-    public ResUpdateResumeDTO update(Resume resume){
-        resume=this.resumeRepository.save(resume);
+    @Transactional
+    public ResUpdateResumeDTO update(Resume resume) {
+        resume = this.resumeRepository.save(resume);
+        Long resumeId = resume.getId();
+        ResumeStateEnum status = resume.getStatus();
+        // Gửi thông báo dựa trên status
+        try {
+            if (status == ResumeStateEnum.APPROVED) {
+                notificationService.notifyResumeApprovedAsync(resumeId);
+            } else if (status == ResumeStateEnum.REJECTED) {
+                notificationService.notifyResumeRejectedAsync(resumeId);
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Lỗi khi gửi thông báo resume update: {}", e.getMessage(), e);
+        }
+
         ResUpdateResumeDTO rs = new ResUpdateResumeDTO();
         rs.setUpdatedAt(resume.getUpdatedAt());
         rs.setUpdatedBy(resume.getUpdatedBy());
-
         return rs;
     }
     public Optional<Resume> getResumeById(long id){
@@ -97,6 +123,7 @@ public class ResumeService  {
         reqFetchResume.setCreatedBy(resume.getCreatedBy());
         reqFetchResume.setUpdatedAt(resume.getUpdatedAt());
         reqFetchResume.setUpdatedBy(resume.getUpdatedBy());
+        reqFetchResume.setLogo(resume.getJob().getCompany().getLogo());
         if(resume.getJob()!=null){
             reqFetchResume.setCompanyName(resume.getJob().getCompany().getName());
         }

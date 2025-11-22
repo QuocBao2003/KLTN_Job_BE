@@ -1,6 +1,7 @@
 package com.example.demo.domain;
 
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,18 +28,36 @@ public class MessageRoom {
 
     @ManyToOne
     @JoinColumn(name = "candidate_id")
+
     private User candidate;
 
     @ManyToOne
     @JoinColumn(name = "employer_id")
+
     private User employer;
 
     @ManyToOne
     @JoinColumn(name = "job_id")
-    private Job job; // Nếu muốn gắn với công việc ứng tuyển cụ thể
+    private Job job;
 
     @CreatedDate
     private LocalDateTime createdDate;
+
+
+    @Column(name = "candidate_unread_count")
+    private Integer candidateUnreadCount = 0;
+
+    @Column(name = "employer_unread_count")
+    private Integer employerUnreadCount = 0;
+
+    @Column(name = "last_message")
+    private String lastMessage;
+
+    @Column(name = "last_message_time")
+    private LocalDateTime lastMessageTime;
+
+    @Column(name = "last_sender_id")
+    private Long lastSenderId;
 
     @OneToMany(mappedBy = "messageRoom", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<MessageContent> messages;

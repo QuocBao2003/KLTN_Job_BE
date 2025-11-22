@@ -3,6 +3,7 @@ package com.example.demo.domain;
 import com.example.demo.util.SecurityUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -15,20 +16,21 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+
 @Table(name = "companies")
 
 public class Company {
 
    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     @NotBlank(message = "companyName không được rỗng")
     private String name;
     @Column(columnDefinition = "MEDIUMTEXT")
     private String description;
     private String address;
     private String logo;
+    private String banner;
 //    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a",timezone = "GMT+7")
     private Instant createdAt;
     private Instant updatedAt;
@@ -41,7 +43,11 @@ public class Company {
     @OneToMany(mappedBy = "company",fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Job> jobs;
-
+    @ManyToOne
+    @JoinColumn(name = "hr_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnore
+    private User hr;
     @PrePersist
     public void handleBeforeCreateAt(){
       this.createdBy= SecurityUtil.getCurrentUserLogin().isPresent()==true ?

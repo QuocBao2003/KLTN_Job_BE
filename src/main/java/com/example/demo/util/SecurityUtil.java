@@ -1,15 +1,20 @@
 package com.example.demo.util;
 
 
+import com.example.demo.domain.Permission;
+import com.example.demo.domain.Role;
 import com.example.demo.domain.User;
 import com.example.demo.dto.request.ExchangeTokenRequest;
 import com.example.demo.dto.response.ResLoginDTO;
+import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.httpclient.OutboundIndentityClient;
 import com.example.demo.repository.httpclient.OutboundUserClient;
-import com.example.demo.service.UserService;
+
+
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -31,6 +36,8 @@ import java.util.*;
 
 @Slf4j
 @Service
+
+
 public class SecurityUtil
 {
     private final JwtEncoder jwtEncoder;
@@ -61,8 +68,12 @@ public class SecurityUtil
     private OutboundUserClient outboundUserClient;
    @Autowired
    private UserRepository userRepository;
+    @Autowired
+    private RoleRepository roleRepository;
+
     public SecurityUtil(JwtEncoder jwtEncoder) {
         this.jwtEncoder = jwtEncoder;
+
 
     }
 //    create token
@@ -76,14 +87,17 @@ public class SecurityUtil
 
 //        hardmode permission
         List<String> listAuthority = new ArrayList<String>();
-        listAuthority.add("ROLE_USER_CREATE");
-        listAuthority.add("ROLE_USER_UPDATE");
+        if(resDTO.getUser().getRole() !=null){
+            listAuthority= resDTO.getUser().getRole().getPermissions().stream().map(Permission::getName).toList();
+        }
+        Role role = roleRepository.findByName(resDTO.getUser().getRole().getName());
 //        @formater:off
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
                 .subject(email)
-                .claim("permission",listAuthority)
+                .claim("role",role.getName())
+                .claim("permissions",listAuthority)
                 .claim("user",userToken)
                 .build();
 
@@ -144,13 +158,19 @@ public class SecurityUtil
 
         var passwordEncoder = new BCryptPasswordEncoder();
         String randomPassword = passwordEncoder.encode(UUID.randomUUID().toString());
-        var user = userRepository.findByEmail(userInfo.getEmail()).orElseGet(
-                () -> userRepository.save(User.builder()
-                                .email(userInfo.getEmail())
-                        .name(userInfo.getName())
-                                .password(randomPassword)
-                        .build())
-        );
+        Role userRole = roleRepository.findByName("USER");
+
+        User user;
+        if (userRepository.existsByEmail(userInfo.getEmail())) {
+            user = userRepository.findByEmail(userInfo.getEmail()).get();
+        } else {
+            user = userRepository.save(User.builder()
+                    .email(userInfo.getEmail())
+                    .name(userInfo.getName())
+                    .password(randomPassword)
+                    .role(userRole)
+                    .build());
+        }
         ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin();
         userLogin.setEmail(user.getEmail());
         userLogin.setName(user.getName());

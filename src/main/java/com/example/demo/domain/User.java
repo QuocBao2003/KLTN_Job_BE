@@ -28,13 +28,13 @@ public class User {
     @NotBlank(message = "password không được để trống")
     private String password;
     @NotBlank(message = "email không được để trống")
+    @Column(unique = true)
     private String email;
 
     @Enumerated(EnumType.STRING)
     private UserStatus status;
-    private LocalDateTime lastLogin = LocalDateTime.now();
-    private String avatarUrl;
 
+    private String avatarUrl;
 
 
     @Enumerated(EnumType.STRING)
@@ -50,22 +50,23 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "company_id")
     private Company company;
-    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Resume> resumes;
 
-    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Savejob> savejobs;
 
     @ManyToOne
     @JoinColumn(name = "role_id")
+    @JsonIgnore
     private Role role;
 
 
     @PrePersist
     public void handleBeforeCreate() {
-        this.createdBy= SecurityUtil.getCurrentUserLogin().isPresent() ?
+        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent() ?
                 SecurityUtil.getCurrentUserLogin().get() : "";
         this.createdAt = Instant.now();
     }
@@ -73,7 +74,7 @@ public class User {
     @PreUpdate
     public void handleBeforeUpdate() {
         this.updatedAt = Instant.now();
-        this.updatedBy=SecurityUtil.getCurrentUserLogin().isPresent()?
+        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent() ?
                 SecurityUtil.getCurrentUserLogin().get() : "";
     }
 }

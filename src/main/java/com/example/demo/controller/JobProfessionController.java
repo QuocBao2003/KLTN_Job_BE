@@ -19,7 +19,6 @@ import java.util.List;
 public class JobProfessionController {
     private final JobProfessionService service;
 
-
     public JobProfessionController(JobProfessionService service) {
         this.service = service;
     }

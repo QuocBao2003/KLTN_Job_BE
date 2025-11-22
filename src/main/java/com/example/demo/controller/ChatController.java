@@ -2,20 +2,15 @@ package com.example.demo.controller;
 
 
 import com.example.demo.domain.MessageRoom;
-import com.example.demo.dto.request.BillItem;
-import com.example.demo.dto.request.ChatRequest;
-import com.example.demo.dto.request.ExpenseInfo;
-import com.example.demo.dto.request.FilmInfo;
-import com.example.demo.dto.response.MessageResponse;
-import com.example.demo.service.ChatService;
+import com.example.demo.dto.response.message.MessageResponse;
 
+import com.example.demo.dto.response.message.MessageRoomDTO;
 import com.example.demo.service.MessageService;
 import com.example.demo.util.annotation.ApiMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -68,8 +63,29 @@ public class ChatController {
      */
     @GetMapping("/chat/rooms")
     @ApiMessage("Get all my chat rooms")
-    public ResponseEntity<List<MessageRoom>> getMyRooms() {
-        List<MessageRoom> rooms = messageService.getMyRooms();
+    public ResponseEntity<List<MessageRoomDTO>> getMyRooms() {
+        List<MessageRoomDTO> rooms = messageService.getMyRooms();
         return ResponseEntity.ok(rooms);
+    }
+    // Đếm só lượng người gửi tin nhắn
+    @GetMapping("/chat/unread-room-count")
+    @ApiMessage("Get number of rooms with unread messages")
+    public ResponseEntity<Integer> getUnreadRoomCount() {
+        Integer count = messageService.getUnreadRoomCount();
+        return ResponseEntity.ok(count);
+    }
+    // Đánh dấu dã đọc khi click vào icon message
+    @PutMapping("/chat/reset-unread")
+    @ApiMessage("Reset all unread counts")
+    public ResponseEntity<Void> resetAllUnreadCounts() {
+        messageService.resetAllUnreadCounts();
+        return ResponseEntity.ok().build();
+    }
+    // ✅ API mới: Đánh dấu phòng đã đọc
+    @PutMapping("/chat/room/{roomId}/mark-read")
+    @ApiMessage("Mark room as read")
+    public ResponseEntity<Void> markRoomAsRead(@PathVariable UUID roomId) {
+        messageService.markRoomAsRead(roomId);
+        return ResponseEntity.ok().build();
     }
 }

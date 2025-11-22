@@ -2,8 +2,11 @@ package com.example.demo.domain;
 
 
 
+import com.example.demo.util.Enum.JobStatus;
 import com.example.demo.util.Enum.LevelEnum;
+import com.example.demo.util.Enum.SalaryTypeEnum;
 import com.example.demo.util.SecurityUtil;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -17,7 +20,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+
 @Entity
 @Table(name = "jobs")
 public class Job {
@@ -30,20 +33,33 @@ public class Job {
     private String name;
     @NotBlank(message = "location không được để trống")
     private String location;
-    private double salary;
+    private Double minSalary;
+    private Double maxSalary;
+
+    @Enumerated(EnumType.STRING)
+    private SalaryTypeEnum salaryType = SalaryTypeEnum.SPECIFIC;
     private int quantity;
     @Enumerated(EnumType.STRING)
     private LevelEnum level;
     @Column(columnDefinition = "MEDIUMTEXT")
     private String description;
+    @Column(columnDefinition = "MEDIUMTEXT")
+    private String request;
+    @Column(columnDefinition = "MEDIUMTEXT")
+    private String interest;
+    @Column(columnDefinition = "MEDIUMTEXT")
+    private String worklocation;
+    @Column(columnDefinition = "MEDIUMTEXT")
+    private String worktime;
+    @Enumerated(EnumType.STRING)
+    private JobStatus status=JobStatus.PENDING;
     private Instant startDate;
     private Instant endDate;
-    private boolean active;
     private Instant createdAt;
     private Instant updatedAt;
     private String createdBy;
     private String updatedBy;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
     private Company company;
 
@@ -64,6 +80,7 @@ public class Job {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_profession_id")
+    @JsonIgnoreProperties({"skills", "jobs", "createdAt", "updatedAt", "createdBy", "updatedBy"})
     private JobProfession jobProfession;
     @PrePersist
     public void handleBeforeCreateAt(){

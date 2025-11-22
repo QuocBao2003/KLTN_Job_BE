@@ -30,10 +30,11 @@ public class Skill {
     @ManyToMany(fetch = FetchType.LAZY,mappedBy = "skills")
     @JsonIgnore
     private List<Job> jobs;
-
-    @ManyToMany(fetch = FetchType.LAZY,mappedBy = "skills")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_profession_id")
     @JsonIgnore
-    private List<Subsciber> subscribers;
+    private JobProfession jobProfession;
+
     @PrePersist
     public void handleBeforeCreateAt(){
         this.createdAt=Instant.now();

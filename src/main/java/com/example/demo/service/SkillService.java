@@ -1,7 +1,9 @@
 package com.example.demo.service;
 
+import com.example.demo.domain.JobProfession;
 import com.example.demo.domain.Skill;
 import com.example.demo.dto.response.ResultPaginationDTO;
+import com.example.demo.repository.JobProfessionRepository;
 import com.example.demo.repository.SkillRepository;
 import com.example.demo.util.error.IdInvalidException;
 import org.springframework.data.domain.Page;
@@ -15,51 +17,81 @@ import java.util.Optional;
 @Service
 public class SkillService {
     private final SkillRepository skillRepository;
-    public SkillService(SkillRepository skillRepository) {
-        this.skillRepository = skillRepository;
-    }
-    public Skill handleSaveSkill(Skill skill) throws IdInvalidException{
+    private final JobProfessionRepository jobProfessionRepository;
 
-        return this.skillRepository.save(skill);
+    public SkillService(SkillRepository skillRepository, JobProfessionRepository jobProfessionRepository) {
+        this.skillRepository = skillRepository;
+        this.jobProfessionRepository = jobProfessionRepository;
     }
-    public Boolean isNameExit(String name){
-        return this.skillRepository.existsByName(name);
+
+    // Create Skill
+    public Skill create(Skill skill, Long professionId) {
+        JobProfession profession = jobProfessionRepository.findById(professionId)
+                .orElseThrow(() -> new RuntimeException("JobProfession không tồn tại"));
+
+        // Set profession
+        skill.setJobProfession(profession);
+
+        // Kiểm tra tên trùng trong profession
+        if(skillRepository.existsByNameAndJobProfession_Id(skill.getName(), professionId)) {
+            throw new RuntimeException("Skill đã tồn tại trong nghề nghiệp này");
+        }
+
+        return skillRepository.save(skill);
     }
-    public ResultPaginationDTO getAllSkill(Specification<Skill> spec, Pageable pageable){
-        Page<Skill> pageSkill = this.skillRepository.findAll(spec,pageable);
+    public boolean isNameExist(String name) {
+        return skillRepository.existsByNameIgnoreCase(name);
+    }
+    // Update Skill
+    public Skill update(Long skillId, Skill skill) {
+        Skill current = skillRepository.findById(skillId)
+                .orElseThrow(() -> new RuntimeException("Skill không tồn tại"));
+
+        if(skill.getName() != null) current.setName(skill.getName());
+        return skillRepository.save(current);
+    }
+
+    // Delete Skill
+    public void delete(Long skillId) {
+        Skill current = skillRepository.findById(skillId)
+                .orElseThrow(() -> new RuntimeException("Skill không tồn tại"));
+
+        // Remove associations with Jobs
+        if(current.getJobs() != null) {
+            current.getJobs().forEach(job -> job.getSkills().remove(current));
+        }
+
+        skillRepository.delete(current);
+    }
+
+    // Get by Id
+    public Skill getById(Long id) {
+        return skillRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Skill không tồn tại"));
+    }
+
+    // Get all Skills (paginate + filter)
+    public ResultPaginationDTO getAll(Specification<Skill> spec, Pageable pageable) {
+        Page<Skill> page = skillRepository.findAll(spec, pageable);
         ResultPaginationDTO rs = new ResultPaginationDTO();
         ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
-
-        mt.setPage(pageable.getPageNumber()+1);
+        mt.setPage(pageable.getPageNumber() + 1);
         mt.setPageSize(pageable.getPageSize());
-        mt.setTotal(pageSkill.getTotalElements());
-        mt.setPages(pageSkill.getTotalPages());
-
+        mt.setTotal(page.getTotalElements());
+        mt.setPages(page.getTotalPages());
         rs.setMeta(mt);
-        rs.setResult(pageSkill.getContent());
+        rs.setResult(page.getContent());
         return rs;
     }
+    public List<Skill> getByProfessionId(Long professionId) {
 
-    public Skill getSkillById(long id) {
-        Optional<Skill> skill = this.skillRepository.findById(id);
-        if(skill.isPresent()) {
-            return skill.get();
-        }
-        return null;
+        jobProfessionRepository.findById(professionId)
+                .orElseThrow(() -> new RuntimeException("JobProfession không tồn tại"));
+
+        return skillRepository.findAllByJobProfession_Id(professionId);
     }
-    public Skill updateSkill(Skill skill) {
-        return this.skillRepository.save(skill);
-    }
-    public void deleteSkillById(long id) {
-//        deltee job (inside job_skill table)
-        Optional<Skill> skillOptional = this.skillRepository.findById(id);
-        Skill currentSkill = skillOptional.get();
-        currentSkill.getJobs().forEach(job ->job.getSkills().remove(currentSkill) );
-//        delete subscriber (inside subscriber_skill)
-        currentSkill.getSubscribers().forEach(subs->subs.getSkills().remove(currentSkill));
-//        deleted skill
-        this.skillRepository.delete(currentSkill);
-    }
+
+
 
 }
 
