@@ -50,6 +50,10 @@ dependencies {
     }
     implementation("org.apache.pdfbox:pdfbox:3.0.3")
     implementation("org.apache.pdfbox:pdfbox-io:3.0.3")
+
+    implementation("org.apache.poi:poi:5.2.3")
+    implementation("org.apache.poi:poi-ooxml:5.2.3")
+
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 }
 dependencyManagement {

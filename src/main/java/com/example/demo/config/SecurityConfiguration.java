@@ -46,18 +46,21 @@ public class SecurityConfiguration {
                 "/api/v1/auth/google", "/api/v1/auth/oauth2/callback/**", "/api/v1/auth/google/token","/api/v1/jobs/company/{companyId}","/api/v1/jobs/company/{companyId}/count",
                 "/api/v1/auth/outbound/authentication","/ws/**","/app/**","/topic/**","/ws","/api/v1/messageAi","/api/v1/fileAi","/api/v1//jobs/jobProfession/{jobProfessionId}",
                 "/api/v1/email/**","/api/v1/files","/api/v1/chat-with-image","/api/v1/chat","/api/v1/auth/registerHR","/api/v1/save-jobs/{userId}","/api/v1/save-jobs/{jobId}"};
+                "/api/v1/email/**","/api/v1/files","/api/v1/ask","/api/v1/auth/registerHR","/api/v1/save-jobs/{userId}","/api/v1/save-jobs/{jobId}"};
         http
                 .csrf(c->c.disable())
-
-                
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(
                 authz -> authz
                         .requestMatchers(whileList).permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/companies/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/jobs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/jobs_professions/**").permitAll()
+
                         .requestMatchers(HttpMethod.GET,"/api/v1/skills/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/resumes/by-user").authenticated()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/submit-cv").authenticated()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/cvs/**").authenticated()
                         .requestMatchers("/api/v1/chat/**").authenticated()
                         .requestMatchers(HttpMethod.GET,"/api/v1/notifications/all").authenticated()
                         .requestMatchers(HttpMethod.GET,"/api/v1/notifications/count").authenticated()

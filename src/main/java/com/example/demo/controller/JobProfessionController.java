@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.domain.JobProfession;
+import com.example.demo.dto.JobFilterDTO;
 import com.example.demo.dto.response.ResultPaginationDTO;
 import com.example.demo.service.JobProfessionService;
 import com.turkraft.springfilter.boot.Filter;
@@ -10,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/job_professions")
@@ -46,4 +49,11 @@ public class JobProfessionController {
         return ResponseEntity.ok(service.getAll(spec,pageable));
     }
 
+    @GetMapping("/tree")
+    public ResponseEntity<List<JobFilterDTO.ProfessionResponse>> getJobFilters(
+            @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword) {
+
+        List<JobFilterDTO.ProfessionResponse> res = service.getTreeMenuData(keyword);
+        return ResponseEntity.ok(res);
+    }
 }
