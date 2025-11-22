@@ -1,3 +1,5 @@
+// Thêm vào CvController.java
+
 package com.example.demo.controller;
 
 import com.example.demo.domain.Cv;
@@ -8,6 +10,7 @@ import com.example.demo.dto.response.cv.ResCreateCvDTO;
 import com.example.demo.dto.response.cv.ResFetchCvDTO;
 import com.example.demo.dto.response.cv.ResUpdateCvDTO;
 import com.example.demo.service.CvService;
+import com.example.demo.service.ExcelService;
 import com.example.demo.util.annotation.ApiMessage;
 import com.example.demo.util.error.IdInvalidException;
 import com.turkraft.springfilter.boot.Filter;
@@ -17,15 +20,33 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
 public class CvController {
-    
-    private final CvService cvService;
 
-    public CvController(CvService cvService) {
+    private final CvService cvService;
+    private final ExcelService excelService;
+
+    public CvController(CvService cvService, ExcelService excelService) {
         this.cvService = cvService;
+        this.excelService = excelService;
+    }
+
+    /**
+     * API upload Excel CV
+     * POST /api/v1/cvs/upload-excel
+     */
+    @PostMapping("/cvs/upload-excel")
+    @ApiMessage("Upload Excel CV thành công")
+    public ResponseEntity<List<Cv>> uploadExcelCv(@RequestParam("file") MultipartFile file)
+            throws IdInvalidException, IOException {
+        List<Cv> cvList = excelService.uploadExcelCv(file);
+        return ResponseEntity.status(HttpStatus.CREATED).body(cvList);
     }
 
     /**

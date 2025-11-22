@@ -19,6 +19,7 @@ repositories {
 extra["springAiVersion"] = "1.0.0-M8"
 
 dependencies {
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
@@ -38,12 +39,19 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
-    implementation("org.springframework.ai:spring-ai-starter-model-ollama")
+    implementation ("org.springframework.boot:spring-boot-starter-websocket")
+    implementation ("org.springframework:spring-messaging")
+    implementation("com.cloudinary:cloudinary-http44:1.37.0")
 
+    implementation("org.apache.poi:poi:5.2.3")
+    implementation("org.apache.poi:poi-ooxml:5.2.3")
+
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 }
 dependencyManagement {
     imports {
         mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")
     }
 }
 tasks.withType<Test> {

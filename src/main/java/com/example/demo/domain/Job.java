@@ -47,20 +47,20 @@ public class Job {
     @JoinColumn(name = "company_id")
     private Company company;
 
-   @ManyToMany(fetch = FetchType.LAZY)
-   @JsonIgnoreProperties(value = {"jobs"})
-   @JoinTable(name = "job_skill",
-    joinColumns = @JoinColumn(name = "job_id"),
-   inverseJoinColumns = @JoinColumn(name = "skill_id"))
-   private List<Skill> skills;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(value = {"jobs"})
+    @JoinTable(name = "job_skill",
+            joinColumns = @JoinColumn(name = "job_id"),
+            inverseJoinColumns = @JoinColumn(name = "skill_id"))
+    private List<Skill> skills;
 
-   @OneToMany(mappedBy = "job",fetch = FetchType.LAZY)
-   @JsonIgnore
-   private List<Resume> resumes;
+    @OneToMany(mappedBy = "job",fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Resume> resumes;
 
-   @OneToMany(mappedBy = "job",fetch = FetchType.LAZY)
-   @JsonIgnore
-   private List<Savejob> savejobs;
+    @OneToMany(mappedBy = "job",fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Savejob> savejobs;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_profession_id")
@@ -69,7 +69,7 @@ public class Job {
     public void handleBeforeCreateAt(){
         this.createdAt=Instant.now();
         this.createdBy= SecurityUtil.getCurrentUserLogin().isPresent()?
-        SecurityUtil.getCurrentUserLogin().get() : "";
+                SecurityUtil.getCurrentUserLogin().get() : "";
     }
     @PreUpdate
     public void handelBeforeUpdateAt(){
