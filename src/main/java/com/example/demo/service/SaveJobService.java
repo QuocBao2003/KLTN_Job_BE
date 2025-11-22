@@ -28,34 +28,51 @@ public class SaveJobService {
     public Savejob save(Savejob savejob) {
         return this.savejobRepository.save(savejob);
     }
-    public ResSaveJobDTO saveJobByUser( Long jobId) throws Exception {
-        Optional<String> userName= SecurityUtil.getCurrentUserLogin();
+    public ResSaveJobDTO saveJobByUser(Long jobId) throws Exception {
+        // Lấy email user hiện tại từ SecurityUtil
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new Exception("Bạn chưa đăng nhập"));
 
-        User user = userService.getUserByEmail(userName.get());
+        // Tìm user theo email
+        User user = userService.getUserByEmail(email)
+                .orElseThrow(() -> new Exception("Không tìm thấy thông tin người dùng"));
 
-        Job job = jobService.getJobById(jobId).orElse(null);
-        if (job == null) {
-            throw new Exception("Job không tồn tại");
+        // Tìm job theo ID
+        Job job = jobService.getJobById(jobId)
+                .orElseThrow(() -> new Exception("Job không tồn tại"));
+
+        // Kiểm tra nếu đã lưu job này rồi
+        if (savejobRepository.existsByUserAndJob(user, job)) {
+            throw new Exception("Công việc này đã được lưu trước đó");
         }
-        if(savejobRepository.existsByUserAndJob(user,job)){
-            throw new Exception("Công việc này đã lưu trước đó");
-        }
+
+        // Tạo bản ghi SaveJob
         Savejob savejob = new Savejob();
         savejob.setUser(user);
         savejob.setJob(job);
         savejob.setSaveTime(LocalDateTime.now());
-        Savejob save= savejobRepository.save(savejob);
-        Company company=job.getCompany();
+        Savejob saved = savejobRepository.save(savejob);
+
+        Company company = job.getCompany();
+
+        // Trả về DTO
         return new ResSaveJobDTO(
                 job.getId(),
                 job.getName(),
-                company !=null ? company.getName() : null,
-                save.getSaveTime()
+                company != null ? company.getName() : null,
+                job.getLocation(),
+                saved.getSaveTime()
         );
     }
 
-    public List<ResSaveJobDTO> getAllSavejobByUser(Long userId) {
-        User user=userService.getUserById(userId);
+    public List<ResSaveJobDTO> getAllSavejobByUser() throws Exception {
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new Exception("Bạn chưa đăng nhập"));
+
+        // Tìm user theo email
+        User user = userService.getUserByEmail(email)
+                .orElseThrow(() -> new Exception("Không tìm thấy thông tin người dùng"));
+
         List<Savejob> savedJobs=savejobRepository.findByUser(user);
         return savedJobs.stream().map(save -> {
             Job job = save.getJob();
@@ -65,6 +82,7 @@ public class SaveJobService {
                     job.getId(),
                     job.getName(),
                     company != null ? company.getName() : null,
+                    job.getLocation(),
                     save.getSaveTime()
             );
         }).collect(Collectors.toList());

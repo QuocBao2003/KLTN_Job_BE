@@ -56,6 +56,9 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET,"/api/v1/jobs_professions/**").permitAll()
 
                         .requestMatchers(HttpMethod.GET,"/api/v1/skills/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/submit-cv").authenticated()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/cvs/**").authenticated()
+                        .requestMatchers("/api/v1/chat/**").authenticated()
                         .anyRequest().authenticated()
                 )
 

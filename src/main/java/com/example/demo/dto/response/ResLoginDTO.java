@@ -2,17 +2,18 @@ package com.example.demo.dto.response;
 
 import com.example.demo.domain.Role;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ResLoginDTO {
     @JsonProperty("access_token")
     private String accessToken;
     private UserLogin user;
+
 
 
     @Getter
