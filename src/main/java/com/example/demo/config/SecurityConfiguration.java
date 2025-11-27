@@ -40,8 +40,9 @@ public class SecurityConfiguration {
     }
 
 
-        @Bean
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
+<<<<<<< Updated upstream
         String[] whileList = {"/","/api/v1/auth/login","/api/v1/auth/refresh","/storage/**","/api/v1/auth/register","/v3/api-docs/**","/swagger-ui/**",
                 "/api/v1/auth/google", "/api/v1/auth/oauth2/callback/**", "/api/v1/auth/google/token",
                 "/api/v1/email/**","/api/v1/files","/api/v1/ask","/api/v1/auth/registerHR","/api/v1/save-jobs/{userId}","/api/v1/save-jobs/{jobId}"};
@@ -59,18 +60,65 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET,"/api/v1/submit-cv").authenticated()
                         .requestMatchers(HttpMethod.GET,"/api/v1/cvs/**").authenticated()
                         .requestMatchers("/api/v1/chat/**").authenticated()
+=======
+        String[] whileList = {
+                "/",
+                "/api/v1/auth/login",
+                "/api/v1/auth/refresh",
+                "/storage/**",
+                "/api/v1/auth/register",
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/api/v1/auth/google",
+                "/api/v1/auth/oauth2/callback/**",
+                "/api/v1/auth/google/token",
+                "/api/v1/jobs/company/{companyId}",
+                "/api/v1/jobs/company/{companyId}/count",
+                "/api/v1/auth/outbound/authentication",
+                "/ws/**",
+                "/app/**",
+                "/topic/**",
+                "/ws",
+                "/api/v1/messageAi",
+                "/api/v1/fileAi",
+                "/api/v1/jobs/jobProfession/{jobProfessionId}", // Đã sửa lỗi //
+                "/api/v1/email/**",
+                "/api/v1/files",
+                "/api/v1/chat-with-image",
+                "/api/v1/chat",
+                "/api/v1/ask", // Đã thêm từ đoạn bị lỗi
+                "/api/v1/auth/registerHR",
+                "/api/v1/save-jobs/{userId}",
+                "/api/v1/save-jobs/{jobId}"
+        };
+
+        http
+                .csrf(c -> c.disable())
+                .cors(Customizer.withDefaults())
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers(whileList).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/companies/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/jobs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/jobs_professions/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/skills/**").permitAll()
+
+                        // Các request cần xác thực
+                        .requestMatchers(HttpMethod.GET, "/api/v1/resumes/by-user").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/submit-cv").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/cvs/**").authenticated()
+                        .requestMatchers("/api/v1/chat/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/notifications/all").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/notifications/count").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/notifications/{id}/read").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/notifications/mark-all-viewed").authenticated()
+>>>>>>> Stashed changes
                         .anyRequest().authenticated()
                 )
-
-                .oauth2ResourceServer((oauth2)->oauth2.jwt(Customizer.withDefaults())
+                .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults())
                         .authenticationEntryPoint(customAuthenticationEntryPoint))
-                .formLogin(f ->f.disable())
+                .formLogin(f -> f.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-//                .exceptionHandling(
-//                        exception ->exception
-//                                .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())//401
-//                                .accessDeniedHandler(new BearerTokenAccessDeniedHandler())) //403
-                .sessionManagement(session ->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
     }
     private SecretKey getSecrectKey() {

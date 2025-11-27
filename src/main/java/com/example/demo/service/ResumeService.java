@@ -70,6 +70,8 @@ public class ResumeService  {
         rs.setId(resume.getId());
         rs.setCreatedAt(resume.getCreatedAt());
         rs.setCreatedBy(resume.getCreatedBy());
+        rs.setUrl(resume.getUrl());
+
         return rs;
     }
     public ResUpdateResumeDTO update(Resume resume){

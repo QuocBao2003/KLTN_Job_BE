@@ -44,8 +44,11 @@ public class Cv {
     @Column(columnDefinition = "TEXT")
     private String skills;
 
-    @Column(columnDefinition = "LONGTEXT") // MySQL
+    @Column(columnDefinition = "LONGTEXT")
     private String photoUrl;
+
+    @Column(columnDefinition = "LONGTEXT")
+    private String url;
 
     private String cvTemplate;
 

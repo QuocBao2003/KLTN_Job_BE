@@ -11,8 +11,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-
-@Repository
 public interface JobProfessionRepository extends JpaRepository<com.example.demo.domain.JobProfession,Long> {
     boolean existsByName(String name);
 
