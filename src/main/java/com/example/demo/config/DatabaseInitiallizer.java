@@ -101,6 +101,8 @@ public class DatabaseInitiallizer implements CommandLineRunner
             arr.add(new Permission("Delete a JobProfession","/api/v1/job_professions/{id}","DELETE", "JOBPROFESSIONS"));
             arr.add(new Permission("Get all JobProfessions", "/api/v1/job_professions", "GET", "JOBPROFESSIONS"));
 
+
+
             arr.add(new Permission(
                     "View HR Statistics",
                     "/api/v1/statistics/hr",
@@ -113,7 +115,19 @@ public class DatabaseInitiallizer implements CommandLineRunner
                     "GET",
                     "STATISTICS"
             ));
+            arr.add(new Permission("Get all service packages (Admin)", "/api/v1/packages/service-packages/all", "GET", "PACKAGES"));
+            arr.add(new Permission("Get service package by id", "/api/v1/packages/service-packages/{id}", "GET", "PACKAGES"));
+            arr.add(new Permission("Create service package", "/api/v1/packages/service-packages", "POST", "PACKAGES"));
+            arr.add(new Permission("Update service package", "/api/v1/packages/service-packages/{id}", "PUT", "PACKAGES"));
+            arr.add(new Permission("Delete service package", "/api/v1/packages/service-packages/{id}", "DELETE", "PACKAGES"));
+            arr.add(new Permission("Toggle service package status", "/api/v1/packages/service-packages/{id}/toggle-status", "PUT", "PACKAGES"));
 
+            // Public/HR - Xem và mua gói
+            arr.add(new Permission("Get active service packages", "/api/v1/packages/service-packages", "GET", "PACKAGES"));
+            arr.add(new Permission("Get my packages", "/api/v1/packages/my-packages", "GET", "PACKAGES"));
+            arr.add(new Permission("Get my active packages", "/api/v1/packages/my-packages/active", "GET", "PACKAGES"));
+            arr.add(new Permission("Create order", "/api/v1/packages/orders", "POST", "PACKAGES"));
+            arr.add(new Permission("Get my orders", "/api/v1/packages/orders", "GET", "PACKAGES"));
             this.permissionRepository.saveAll(arr);
         }
         if (countRoles == 0) {

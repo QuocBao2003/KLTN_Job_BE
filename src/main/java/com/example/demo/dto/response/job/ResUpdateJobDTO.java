@@ -14,22 +14,16 @@ import java.util.List;
 public class ResUpdateJobDTO {
     private long id;
     private String name;
-
     private String location;
-
     private Double minSalary;
     private Double maxSalary;
     private SalaryTypeEnum salaryType;
-
     private int quantity;
-
     private LevelEnum level;
-
-
     private Instant startDate;
     private Instant endDate;
     private JobStatus status;
-
+    private String logo;
     private List<String> skills;
     private String jobProfessionName;
     private Instant updatedAt;

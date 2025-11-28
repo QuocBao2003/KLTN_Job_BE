@@ -53,6 +53,11 @@ public class Job {
     private String worktime;
     @Enumerated(EnumType.STRING)
     private JobStatus status=JobStatus.PENDING;
+
+
+    @ManyToOne
+    @JoinColumn(name = "user_package_id")
+    private UserPackage userPackage;
     private Instant startDate;
     private Instant endDate;
     private Instant createdAt;

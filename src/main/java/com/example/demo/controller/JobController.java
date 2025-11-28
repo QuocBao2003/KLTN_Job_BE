@@ -42,9 +42,11 @@ public class JobController {
 
     @PostMapping("/jobs")
     @ApiMessage("Create a new job")
-    public ResponseEntity<ResCreateJobDTO> createJob(@Valid @RequestBody Job job) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(this.jobService.createJob(job));
-
+    public ResponseEntity<ResCreateJobDTO> createJob(
+            @Valid @RequestBody Job job,
+            @RequestParam Long userPackageId) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(this.jobService.createJob(job, userPackageId));
     }
     @PutMapping("/jobs")
     @ApiMessage("Update job")
@@ -73,7 +75,7 @@ public class JobController {
     }
 
     @GetMapping("/jobs")
-    @ApiMessage("GET JOBs Public")
+    @ApiMessage("Get all public jobs with package priority")
     public ResponseEntity<ResultPaginationDTO> getAllJobs(
             @Filter Specification<Job> spec,
             Pageable pageable
@@ -111,7 +113,7 @@ public class JobController {
             spec = spec != null ? spec.and(filterByCompanies) : filterByCompanies;
         }
 
-        return ResponseEntity.ok(jobService.getAllJob(spec, pageable));
+        return ResponseEntity.ok(jobService.getAllJobByRole(spec, pageable));
     }
 
     @PreAuthorize("hasAuthority('SUPER_ADMIN')")

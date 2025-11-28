@@ -107,6 +107,17 @@ public interface JobRepository extends JpaRepository<Job,Long> {
             @Param("endDate") Instant endDate
     );
 
+    @Query("SELECT j FROM Job as j "+
+        "LEFT JOIN j.userPackage as up " +
+        "LEFT JOIN up.servicePackage as sp " +
+        "WHERE j.status = :status "+
+        "ORDER BY CASE "+
+        "WHEN sp.packageType = 'FEATURED_JOB' THEN 1 "+
+            "WHEN sp.packageType = 'PRIORITY_BOLD_TITLE' THEN 2 " +
+            "WHEN sp.packageType = 'PRIORITY_DISPLAY' THEN 3 " +
+            "ELSE 4 END, j.updatedAt DESC")
+    Page<Job> findAllWithPackagePriority(@Param("status") JobStatus status, Pageable pageable);
+
 
 
 

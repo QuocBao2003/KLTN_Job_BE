@@ -6,6 +6,8 @@ import com.example.demo.dto.response.job.ResUpdateJobDTO;
 import com.example.demo.dto.response.ResultPaginationDTO;
 import com.example.demo.repository.*;
 import com.example.demo.util.Enum.JobStatus;
+import com.example.demo.util.Enum.PackageStatus;
+import com.example.demo.util.Enum.PackageType;
 import com.example.demo.util.Enum.SalaryTypeEnum;
 import com.example.demo.util.SecurityUtil;
 import org.springframework.data.domain.Page;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,19 +27,23 @@ public class JobService {
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final UserPackageRepository userPackageRepository;
+    private final UserPackageService userPackageService;
     private final JobProfessionRepository jobProfessionRepository;
     public JobService(JobRepository jobRepository, SkillRepository skillRepository,
                       CompanyRepository companyRepository, UserRepository userRepository,
-                      NotificationService notificationService, JobProfessionRepository jobProfessionRepository) {
+                      NotificationService notificationService, UserPackageRepository userPackageRepository, UserPackageService userPackageService, JobProfessionRepository jobProfessionRepository) {
         this.jobRepository = jobRepository;
         this.skillRepository = skillRepository;
         this.companyRepository = companyRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
+        this.userPackageRepository = userPackageRepository;
+        this.userPackageService = userPackageService;
         this.jobProfessionRepository = jobProfessionRepository;
     }
 
-    public ResCreateJobDTO createJob(Job job) {
+    public ResCreateJobDTO createJob(Job job,Long userPackageId) {
         // Check user
         String currentLogin = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -46,7 +53,30 @@ public class JobService {
         if (!hrUser.getRole().getName().equals("HR")) {
             throw new RuntimeException("User is not HR for Company");
         }
+        if (userPackageId == null) {
+            throw new RuntimeException("User package is required to create job");
+        }
 
+        UserPackage userPackage = userPackageRepository.findById(userPackageId)
+                .orElseThrow(() -> new RuntimeException("User package not found"));
+
+        // Validate user package
+        if (!userPackage.getUser().getId().equals(hrUser.getId())) {
+            throw new RuntimeException("User package does not belong to current user");
+        }
+
+        if (userPackage.getStatus() != PackageStatus.ACTIVE) {
+            throw new RuntimeException("User package is not active");
+        }
+
+        if (userPackage.getEndDate().isBefore(Instant.now())) {
+            throw new RuntimeException("User package has expired");
+        }
+
+        if (userPackage.getRemainingJobCount() <= 0) {
+            throw new RuntimeException("No remaining jobs in this package");
+        }
+        job.setUserPackage(userPackage);
         job.setStatus(JobStatus.PENDING);
         if (job.getCompany() != null && job.getCompany().getId() != null) {
             Company company = companyRepository.findById(job.getCompany().getId())
@@ -111,6 +141,7 @@ public class JobService {
 
         // Create job
         Job currentJob = jobRepository.save(job);
+        userPackageService.decrementJobCount(userPackageId);
         notificationService.notificationJobCreate(currentJob);
 
         return convertToResCreateJobDTO(currentJob);
@@ -189,33 +220,60 @@ public class JobService {
     }
 
     private ResCreateJobDTO convertToResCreateJobDTO(Job job) {
-        ResCreateJobDTO rs = new ResCreateJobDTO();
-        rs.setId(job.getId());
-        rs.setName(job.getName());
-        rs.setLocation(job.getLocation());
-        rs.setMinSalary(job.getMinSalary());
-        rs.setMaxSalary(job.getMaxSalary());
-        rs.setSalaryType(job.getSalaryType());
-        rs.setQuantity(job.getQuantity());
-        rs.setLevel(job.getLevel());
-        rs.setStartDate(job.getStartDate());
-        rs.setEndDate(job.getEndDate());
-        rs.setStatus(job.getStatus());
-        rs.setCreatedAt(job.getCreatedAt());
-        rs.setCreatedBy(job.getCreatedBy());
-
-        if (job.getJobProfession() != null) {
-            rs.setJobProfessionName(job.getJobProfession().getName());
-        }
+        ResCreateJobDTO res = new ResCreateJobDTO();
+        res.setId(job.getId());
+        res.setName(job.getName());
+        res.setLocation(job.getLocation());
+        res.setMinSalary(job.getMinSalary());
+        res.setMaxSalary(job.getMaxSalary());
+        res.setSalaryType(job.getSalaryType());
+        res.setQuantity(job.getQuantity());
+        res.setLevel(job.getLevel());
+        res.setStartDate(job.getStartDate());
+        res.setEndDate(job.getEndDate());
+        res.setCreatedAt(job.getCreatedAt());
+        res.setCreatedBy(job.getCreatedBy());
+        res.setStatus(job.getStatus());
+        res.setLogo(job.getCompany().getLogo());
 
         if (job.getSkills() != null) {
-            List<String> skills = job.getSkills().stream()
-                    .map(Skill::getName)
+            List<String> skills = job.getSkills()
+                    .stream().map(Skill::getName)
                     .collect(Collectors.toList());
-            rs.setSkills(skills);
+            res.setSkills(skills);
         }
 
-        return rs;
+        if (job.getJobProfession() != null) {
+            res.setJobProfessionName(job.getJobProfession().getName());
+        }
+
+        // THÊM THÔNG TIN GÓI DỊCH VỤ
+        if (job.getUserPackage() != null && job.getUserPackage().getServicePackage() != null) {
+            PackageType packageType = job.getUserPackage().getServicePackage().getPackageType();
+            res.setPackageType(packageType);
+
+            // Kiểm tra xem gói còn hạn không
+            boolean isActive = job.getUserPackage().getEndDate().isAfter(Instant.now());
+
+            if (isActive) {
+                switch (packageType) {
+                    case FEATURED_JOB:
+                        res.setFeatured(true);
+                        res.setHasBoldTitle(true);
+                        break;
+                    case PRIORITY_BOLD_TITLE:
+                        res.setFeatured(false);
+                        res.setHasBoldTitle(true);
+                        break;
+                    case PRIORITY_DISPLAY:
+                        res.setFeatured(false);
+                        res.setHasBoldTitle(false);
+                        break;
+                }
+            }
+        }
+
+        return res;
     }
 
     private ResUpdateJobDTO convertToResUpdateJobDTO(Job job) {
@@ -233,7 +291,7 @@ public class JobService {
         rs.setStatus(job.getStatus());
         rs.setUpdatedAt(job.getUpdatedAt());
         rs.setUpdatedBy(job.getUpdatedBy());
-
+        rs.setLogo(job.getCompany().getLogo());
         if (job.getJobProfession() != null) {
             rs.setJobProfessionName(job.getJobProfession().getName());
         }
@@ -257,15 +315,46 @@ public class JobService {
     }
 
     public ResultPaginationDTO getAllJob(Specification<Job> spec, Pageable pageable) {
-        Page<Job> pagejob = jobRepository.findAll(spec, pageable);
+        // Sử dụng query mới với package priority
+        Page<Job> pageJob = jobRepository.findAllWithPackagePriority(JobStatus.APPROVED, pageable);
+
         ResultPaginationDTO rs = new ResultPaginationDTO();
         ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
+
         mt.setPage(pageable.getPageNumber() + 1);
         mt.setPageSize(pageable.getPageSize());
-        mt.setTotal(pagejob.getTotalElements());
-        mt.setPages(pagejob.getTotalPages());
+        mt.setTotal(pageJob.getTotalElements());
+        mt.setPages(pageJob.getTotalPages());
+
         rs.setMeta(mt);
-        rs.setResult(pagejob.getContent());
+
+        List<ResCreateJobDTO> listJob = pageJob.getContent()
+                .stream().map(this::convertToResCreateJobDTO)
+                .collect(Collectors.toList());
+
+        rs.setResult(listJob);
+
+        return rs;
+    }
+    public ResultPaginationDTO getAllJobByRole(Specification<Job> spec, Pageable pageable) {
+        Page<Job> pageJob = jobRepository.findAll(spec, pageable);
+
+        ResultPaginationDTO rs = new ResultPaginationDTO();
+        ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
+
+        mt.setPage(pageable.getPageNumber() + 1);
+        mt.setPageSize(pageable.getPageSize());
+        mt.setTotal(pageJob.getTotalElements());
+        mt.setPages(pageJob.getTotalPages());
+
+        rs.setMeta(mt);
+
+        List<ResCreateJobDTO> listJob = pageJob.getContent()
+                .stream().map(this::convertToResCreateJobDTO)
+                .collect(Collectors.toList());
+
+        rs.setResult(listJob);
+
         return rs;
     }
 
