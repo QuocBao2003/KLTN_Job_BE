@@ -10,10 +10,12 @@ import com.example.demo.repository.CompanyRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.JobService;
 import com.example.demo.util.Enum.JobStatus;
+import com.example.demo.util.Enum.LevelEnum;
 import com.example.demo.util.SecurityUtil;
 import com.example.demo.util.annotation.ApiMessage;
 import com.example.demo.util.error.IdInvalidException;
 import com.turkraft.springfilter.boot.Filter;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,10 +25,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -78,14 +78,70 @@ public class JobController {
     @ApiMessage("Get all public jobs with package priority")
     public ResponseEntity<ResultPaginationDTO> getAllJobs(
             @Filter Specification<Job> spec,
-            Pageable pageable
-            ){
-        Specification<Job> approved = (root, query, cb) ->
+            Pageable pageable,
+            @RequestParam(value = "professionIds", required = false) String professionIds,
+            @RequestParam(value = "jobLevels", required = false) String jobLevels,
+            @RequestParam(value = "skillIds", required = false) String skillIds
+            // -------------------------------------------------------------
+    ) {
+
+        System.out.println(">>> CHECK PARAMETER:");
+        System.out.println("Raw professionIds: " + professionIds);
+
+
+        Specification<Job> finalSpec = (root, query, cb) ->
                 cb.equal(root.get("status"), JobStatus.APPROVED);
 
-        spec = spec != null ? spec.and(approved) : approved;
-        return ResponseEntity.ok(this.jobService.getAllJob(spec,pageable));
+        if (spec != null) {
+            finalSpec = finalSpec.and(spec);
+        }
+
+        if (professionIds != null && !professionIds.isEmpty()) {
+            List<Long> ids = Arrays.stream(professionIds.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(Long::parseLong)
+                    .collect(Collectors.toList());
+
+            System.out.println("Parsed IDs List: " + ids.toString());
+
+            if (!ids.isEmpty()) {
+                finalSpec = finalSpec.and((root, query, cb) ->
+                        root.get("jobProfession").get("id").in(ids));
+            }
+        }
+
+        if (jobLevels != null && !jobLevels.isEmpty()) {
+            List<String> levels = Arrays.stream(jobLevels.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+
+            if (!levels.isEmpty()) {
+                finalSpec = finalSpec.and((root, query, cb) ->
+                        root.get("level").as(String.class).in(levels));
+            }
+        }
+
+        // 5. Xử lý thủ công: Skills (Map từ tham số 'skillIds')
+        if (skillIds != null && !skillIds.isEmpty()) {
+            List<Long> ids = Arrays.stream(skillIds.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(Long::parseLong)
+                    .collect(Collectors.toList());
+
+            if (!ids.isEmpty()) {
+                finalSpec = finalSpec.and((root, query, cb) -> {
+                    query.distinct(true); // Tránh duplicate job khi join
+                    return root.join("skills", JoinType.LEFT).get("id").in(ids);
+                });
+            }
+        }
+
+        return ResponseEntity.ok(this.jobService.getAllJob(finalSpec, pageable));
     }
+
     @GetMapping("/jobs/jobProfession/{jobProfessionId}")
     @ApiMessage("Get job by profession")
     public ResponseEntity<Page<Job>> getJobByJobProfesionAndStatus(@PathVariable("jobProfessionId") long jobProfessionId,Pageable pageable){

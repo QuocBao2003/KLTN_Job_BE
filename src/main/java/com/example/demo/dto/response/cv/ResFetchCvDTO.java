@@ -28,6 +28,8 @@ public class ResFetchCvDTO {
     private String createdBy;
     private String updatedBy;
     private UserCv user;
+    private String url;
+
 
     @Getter
     @Setter
