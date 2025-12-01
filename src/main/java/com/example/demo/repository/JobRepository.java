@@ -25,16 +25,68 @@ public interface JobRepository extends JpaRepository<Job,Long> {
 
     @Query("SELECT j from Job as j where j.jobProfession.id = :jobProfessionId and j.status=:jobStatus")
     Page<Job> findByJobProfessionIdAndStatus(@Param("jobProfessionId") Long jobProfessionId, @Param("jobStatus") JobStatus jobStatus, Pageable pageable);
+//    Chat AI
+//    @Query("""
+//        SELECT DISTINCT j FROM Job j
+//        LEFT JOIN j.skills s
+//        LEFT JOIN j.jobProfession jp
+//        WHERE j.status = 'APPROVED'
+//        AND (
+//            LOWER(j.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+//            OR LOWER(j.location) LIKE LOWER(CONCAT('%', :keyword, '%'))
+//            OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+//            OR LOWER(jp.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+//        )
+//        ORDER BY j.createdAt DESC
+//        """)
+//    List<Job> searchJobs(String keyword);
+
+    @Query ("SELECT DISTINCT j FROM Job as j where j.status = 'APPROVED'" +
+            " AND UPPER(j.location) = UPPER(:location)" +
+            "ORDER BY j.createdAt DESC ")
+    List<Job> findByLocation(@Param("location") String location);
+
+    @Query("""
+        SELECT DISTINCT j FROM Job j
+        INNER JOIN j.skills s
+        WHERE j.status = 'APPROVED'
+        AND LOWER(s.name) LIKE LOWER(CONCAT('%', :skillName, '%'))
+        ORDER BY j.createdAt DESC
+        """)
+    List<Job> findBySkillName(@Param("skillName") String skillName);
+
+    @Query("""
+        SELECT DISTINCT j FROM Job j
+        INNER JOIN j.jobProfession jp
+        WHERE j.status = 'APPROVED'
+        AND LOWER(jp.name) LIKE LOWER(CONCAT('%', :professionName, '%'))
+        ORDER BY j.createdAt DESC
+        """)
+    List<Job> findByProfessionName(@Param("professionName") String professionName);
 
     @Query("""
         SELECT DISTINCT j FROM Job j
         LEFT JOIN j.skills s
-        WHERE LOWER(j.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        OR LOWER(j.location) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        ORDER BY j.id DESC
+        LEFT JOIN j.jobProfession jp
+        WHERE j.status = 'APPROVED'
+        AND (
+            :location IS NULL OR UPPER(j.location) = UPPER(:location)
+        )
+        AND (
+            :skillName IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :skillName, '%'))
+        )
+        AND (
+            :professionName IS NULL OR LOWER(jp.name) LIKE LOWER(CONCAT('%', :professionName, '%'))
+        )
+        ORDER BY j.createdAt DESC
         """)
-    List<Job> searchJobs(String keyword);
+    List<Job> searchByMultipleCriteria(
+            @Param("location") String location,
+            @Param("skillName") String skillName,
+            @Param("professionName") String professionName
+    );
+    List<Job> findTop10ByStatusOrderByCreatedAtDesc(JobStatus status);
+
 
    Page<Job> findByCompanyIdAndStatus(Long companyId, JobStatus status, Pageable pageable);
 // đếm job them company and status

@@ -29,6 +29,7 @@ public class ChatResponse {
         private String logo;
         private double salary;
         private String level;
+        private List<String> skills;
     }
 
 }

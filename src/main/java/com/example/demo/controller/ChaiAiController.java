@@ -21,13 +21,13 @@ public class ChaiAiController {
         ChatResponse response = chatService.chat(chatRequest.getMessage(), conversationId);
         return ResponseEntity.ok(response);
     }
-    @PostMapping("/fileAi")
-    public ResponseEntity<ChatResponse> fileAi(@RequestParam("file") MultipartFile file,@RequestParam(value = "message",defaultValue = "Tìm công việc phù hợp với CV của tôi")
-                                               String message){
-        String conversationId = getCurrentUserId();
-        ChatResponse response = chatService.chatWithFile(file, message, conversationId);
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping("/fileAi")
+//    public ResponseEntity<ChatResponse> fileAi(@RequestParam("file") MultipartFile file,@RequestParam(value = "message",defaultValue = "Tìm công việc phù hợp với CV của tôi")
+//                                               String message){
+//        String conversationId = getCurrentUserId();
+//        ChatResponse response = chatService.chatWithFile(file, message, conversationId);
+//        return ResponseEntity.ok(response);
+//    }
 
     private String getCurrentUserId() {
         return SecurityUtil.getCurrentUserLogin()
