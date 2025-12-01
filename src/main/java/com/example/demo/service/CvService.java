@@ -62,6 +62,8 @@ public class CvService {
         cv.setSkills(reqDto.getSkills());
         cv.setPhotoUrl(reqDto.getPhotoUrl());
         cv.setCvTemplate(reqDto.getCvTemplate());
+        cv.setUrl(reqDto.getUrl());
+
 
         // Lấy user hiện tại nếu đã login
         Optional<String> currentUserLogin = SecurityUtil.getCurrentUserLogin();
@@ -127,6 +129,9 @@ public class CvService {
         }
         if (reqDto.getCvTemplate() != null) {
             cv.setCvTemplate(reqDto.getCvTemplate());
+        }
+        if (reqDto.getUrl() != null) {
+            cv.setUrl(reqDto.getUrl());
         }
 
         Cv updatedCv = cvRepository.save(cv);
@@ -253,6 +258,7 @@ public class CvService {
         dto.setUpdatedAt(cv.getUpdatedAt());
         dto.setCreatedBy(cv.getCreatedBy());
         dto.setUpdatedBy(cv.getUpdatedBy());
+        dto.setUrl(cv.getUrl());
 
         // Set user info if exists
         if (cv.getUser() != null) {

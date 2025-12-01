@@ -16,4 +16,7 @@ public class ResCreateResumeDTO {
     private long id;
     private Instant createdAt;
     private String createdBy;
+    private String url;
+
+
 }
