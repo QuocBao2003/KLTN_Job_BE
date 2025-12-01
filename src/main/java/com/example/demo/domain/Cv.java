@@ -47,6 +47,9 @@ public class Cv {
     @Column(columnDefinition = "LONGTEXT") // MySQL
     private String photoUrl;
 
+    @Column(columnDefinition = "LONGTEXT")
+    private String url;
+
     private String cvTemplate;
 
     private Instant createdAt;

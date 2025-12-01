@@ -21,4 +21,5 @@ public class ReqUpdateCvDTO {
     private String skills;
     private String photoUrl;
     private String cvTemplate;
+    private String url;
 }

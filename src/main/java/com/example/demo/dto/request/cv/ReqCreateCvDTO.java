@@ -34,5 +34,8 @@ public class ReqCreateCvDTO {
 
     private String photoUrl;
 
-    private String cvTemplate; // "Tiêu chuẩn", "Thanh Lịch", "Hiện đại"
+    private String cvTemplate; // "Tiêu chuẩn"
+
+    @NotBlank(message = "URL CV không được để trống") // Tùy chọn validate
+    private String url;
 }
