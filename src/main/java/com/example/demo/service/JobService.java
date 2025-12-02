@@ -235,6 +235,8 @@ public class JobService {
         res.setCreatedBy(job.getCreatedBy());
         res.setStatus(job.getStatus());
         res.setLogo(job.getCompany().getLogo());
+        res.setCompanyName(job.getCompany().getName());
+
 
         if (job.getSkills() != null) {
             List<String> skills = job.getSkills()
