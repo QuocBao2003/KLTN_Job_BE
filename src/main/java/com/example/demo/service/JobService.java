@@ -139,6 +139,7 @@ public class JobService {
         job.setWorklocation(job.getWorklocation());
         job.setWorktime(job.getWorktime());
 
+
         // Create job
         Job currentJob = jobRepository.save(job);
         userPackageService.decrementJobCount(userPackageId);
@@ -235,7 +236,7 @@ public class JobService {
         res.setCreatedBy(job.getCreatedBy());
         res.setStatus(job.getStatus());
         res.setLogo(job.getCompany().getLogo());
-
+        res.setCompanyName(job.getCompany().getName());
         if (job.getSkills() != null) {
             List<String> skills = job.getSkills()
                     .stream().map(Skill::getName)
@@ -292,6 +293,7 @@ public class JobService {
         rs.setUpdatedAt(job.getUpdatedAt());
         rs.setUpdatedBy(job.getUpdatedBy());
         rs.setLogo(job.getCompany().getLogo());
+        rs.setCompanyName(job.getCompany().getName());
         if (job.getJobProfession() != null) {
             rs.setJobProfessionName(job.getJobProfession().getName());
         }

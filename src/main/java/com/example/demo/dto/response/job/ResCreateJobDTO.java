@@ -27,6 +27,7 @@ public class ResCreateJobDTO {
 
     private LevelEnum level;
     private String logo;
+    private String companyName;
     private Instant startDate;
     private Instant endDate;
     private JobStatus status;

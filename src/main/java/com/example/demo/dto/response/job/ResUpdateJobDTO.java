@@ -24,6 +24,7 @@ public class ResUpdateJobDTO {
     private Instant endDate;
     private JobStatus status;
     private String logo;
+    private String companyName;
     private List<String> skills;
     private String jobProfessionName;
     private Instant updatedAt;
