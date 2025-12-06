@@ -5,6 +5,7 @@ import com.example.demo.domain.User;
 import com.example.demo.dto.request.RequestLoginDTO;
 import com.example.demo.dto.response.ResCreateUserDTO;
 import com.example.demo.dto.response.ResLoginDTO;
+import com.example.demo.service.ForgotPasswordService;
 import com.example.demo.service.RoleService;
 import com.example.demo.service.UserService;
 import com.example.demo.util.SecurityUtil;
@@ -25,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -36,6 +38,7 @@ public class AuthController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final RoleService roleService;
+    private final ForgotPasswordService forgotPassword;
 
 
     @Value("${demo.jwt.refresh-token-validity-in-seconds}")
@@ -44,7 +47,7 @@ public class AuthController {
     public AuthController(SecurityUtil securityUtil,
                           AuthenticationManagerBuilder authenticationManagerBuilder,
                           UserService userService,
-                          PasswordEncoder passwordEncoder, RoleService roleService
+                          PasswordEncoder passwordEncoder, RoleService roleService, ForgotPasswordService forgotPassword
 
     ) {
         this.securityUtil = securityUtil;
@@ -54,8 +57,14 @@ public class AuthController {
 
 
         this.roleService = roleService;
+        this.forgotPassword = forgotPassword;
     }
-
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String,String> body) {
+        String email = body.get("email");
+        forgotPassword.forgetPassword(email);
+        return ResponseEntity.ok("Mật khẩu mới đã được gửi vào email của bạn");
+    }
     @PostMapping("/auth/login")
     public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody RequestLoginDTO loginDTO) {
 //        Nạp input gồm username,password vào security

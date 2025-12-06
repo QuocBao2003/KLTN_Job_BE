@@ -20,26 +20,10 @@ public interface JobRepository extends JpaRepository<Job,Long> {
     boolean existsJobByName(String name);
 
     Page<Job> findAll(Specification<Job> spec, Pageable pageable);
-//    tìm danh sách công việc chứa skill
-    List<Job> findBySkillsIn(List<Skill> skills);
 
     @Query("SELECT j from Job as j where j.jobProfession.id = :jobProfessionId and j.status=:jobStatus")
     Page<Job> findByJobProfessionIdAndStatus(@Param("jobProfessionId") Long jobProfessionId, @Param("jobStatus") JobStatus jobStatus, Pageable pageable);
-//    Chat AI
-//    @Query("""
-//        SELECT DISTINCT j FROM Job j
-//        LEFT JOIN j.skills s
-//        LEFT JOIN j.jobProfession jp
-//        WHERE j.status = 'APPROVED'
-//        AND (
-//            LOWER(j.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-//            OR LOWER(j.location) LIKE LOWER(CONCAT('%', :keyword, '%'))
-//            OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-//            OR LOWER(jp.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-//        )
-//        ORDER BY j.createdAt DESC
-//        """)
-//    List<Job> searchJobs(String keyword);
+
 
     @Query ("SELECT DISTINCT j FROM Job as j where j.status = 'APPROVED'" +
             " AND UPPER(j.location) = UPPER(:location)" +

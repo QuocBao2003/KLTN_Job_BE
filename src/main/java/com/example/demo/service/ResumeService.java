@@ -125,10 +125,11 @@ public class ResumeService  {
         reqFetchResume.setUpdatedAt(resume.getUpdatedAt());
         reqFetchResume.setUpdatedBy(resume.getUpdatedBy());
         reqFetchResume.setLogo(resume.getJob().getCompany().getLogo());
+
         if(resume.getJob()!=null){
             reqFetchResume.setCompanyName(resume.getJob().getCompany().getName());
         }
-        reqFetchResume.setUser(new ResFetchResumeDTO.UserResume(resume.getUser().getId(),resume.getUser().getName()));
+        reqFetchResume.setUser(new ResFetchResumeDTO.UserResume(resume.getUser().getId(),resume.getUser().getName(),resume.getUser().getAddress()));
         reqFetchResume.setJob(new ResFetchResumeDTO.JobResume(resume.getJob().getId(),resume.getJob().getName()));
         return reqFetchResume;
     }

@@ -34,6 +34,7 @@ public class ResFetchResumeDTO {
     public static class UserResume{
         private long id;
         private String name;
+        private String address;
     }
 
     @Getter

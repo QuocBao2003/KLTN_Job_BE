@@ -48,7 +48,7 @@ public class SecurityConfiguration {
                     "/api/v1/email/**","/api/v1/files","/api/v1/chat-with-image","/api/v1/chat","/api/v1/auth/registerHR","/api/v1/save-jobs/{userId}","/api/v1/save-jobs/{jobId}",
                     "/api/v1/job_professions/tree",
                     "/api/v1/packages/payment/callback",  // MoMo callback
-                    "/api/v1/packages/payment/return"  };
+                    "/api/v1/packages/payment/return" ,"/api/v1/forgot-password" };
         http
                 .csrf(c->c.disable())
                 .cors(Customizer.withDefaults())
