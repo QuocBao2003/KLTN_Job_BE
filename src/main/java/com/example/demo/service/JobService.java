@@ -318,8 +318,8 @@ public class JobService {
 
     public ResultPaginationDTO getAllJob(Specification<Job> spec, Pageable pageable) {
         // Sử dụng query mới với package priority
-//        Page<Job> pageJob = jobRepository.findAllWithPackagePriority(JobStatus.APPROVED, pageable);
-        Page<Job> pageJob = jobRepository.findAll(spec, pageable);
+      Page<Job> pageJob = jobRepository.findAllWithPackagePriority(spec, pageable);
+
 
         ResultPaginationDTO rs = new ResultPaginationDTO();
         ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();

@@ -39,41 +39,6 @@ public class JobController {
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
     }
-
-    @PostMapping("/jobs")
-    @ApiMessage("Create a new job")
-    public ResponseEntity<ResCreateJobDTO> createJob(
-            @Valid @RequestBody Job job,
-            @RequestParam Long userPackageId) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(this.jobService.createJob(job, userPackageId));
-    }
-    @PutMapping("/jobs")
-    @ApiMessage("Update job")
-    public ResponseEntity<ResUpdateJobDTO> updateJob(@Valid @RequestBody Job job) throws IdInvalidException {
-        Optional<Job> currnentJob = this.jobService.getJobById(job.getId());
-        if(!currnentJob.isPresent()){
-            throw  new IdInvalidException("Job not found");
-        }
-        return ResponseEntity.ok().body(this.jobService.updateJob(job,currnentJob.get()));
-    }
-    @DeleteMapping("/jobs/{id}")
-    @ApiMessage("Delete job")
-    public ResponseEntity<Void> handleDeleteJob(@PathVariable("id") long id){
-        this.jobService.deleteJob(id);
-        return ResponseEntity.ok(null);
-    }
-
-    @GetMapping("/jobs/{id}")
-    @ApiMessage("Get job by id")
-    public ResponseEntity<Job> getJobById(@PathVariable("id") long id) throws IdInvalidException {
-        Optional<Job> job = this.jobService.getJobById(id);
-        if(!job.isPresent()){
-            throw  new IdInvalidException("Job not found");
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(job.get());
-    }
-
     @GetMapping("/jobs")
     @ApiMessage("Get all public jobs with package priority")
     public ResponseEntity<ResultPaginationDTO> getAllJobs(
@@ -141,6 +106,41 @@ public class JobController {
 
         return ResponseEntity.ok(this.jobService.getAllJob(finalSpec, pageable));
     }
+    @PostMapping("/jobs")
+    @ApiMessage("Create a new job")
+    public ResponseEntity<ResCreateJobDTO> createJob(
+            @Valid @RequestBody Job job,
+            @RequestParam Long userPackageId) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(this.jobService.createJob(job, userPackageId));
+    }
+    @PutMapping("/jobs")
+    @ApiMessage("Update job")
+    public ResponseEntity<ResUpdateJobDTO> updateJob(@Valid @RequestBody Job job) throws IdInvalidException {
+        Optional<Job> currnentJob = this.jobService.getJobById(job.getId());
+        if(!currnentJob.isPresent()){
+            throw  new IdInvalidException("Job not found");
+        }
+        return ResponseEntity.ok().body(this.jobService.updateJob(job,currnentJob.get()));
+    }
+    @DeleteMapping("/jobs/{id}")
+    @ApiMessage("Delete job")
+    public ResponseEntity<Void> handleDeleteJob(@PathVariable("id") long id){
+        this.jobService.deleteJob(id);
+        return ResponseEntity.ok(null);
+    }
+
+    @GetMapping("/jobs/{id}")
+    @ApiMessage("Get job by id")
+    public ResponseEntity<Job> getJobById(@PathVariable("id") long id) throws IdInvalidException {
+        Optional<Job> job = this.jobService.getJobById(id);
+        if(!job.isPresent()){
+            throw  new IdInvalidException("Job not found");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(job.get());
+    }
+
+
 
     @GetMapping("/jobs/jobProfession/{jobProfessionId}")
     @ApiMessage("Get job by profession")

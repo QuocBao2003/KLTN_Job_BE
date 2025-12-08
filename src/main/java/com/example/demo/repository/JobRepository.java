@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,7 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
-public interface JobRepository extends JpaRepository<Job,Long> {
+public interface JobRepository extends JpaRepository<Job,Long>, JpaSpecificationExecutor<Job>,
+        JobCustomRepository {
     boolean existsJobByName(String name);
 
     Page<Job> findAll(Specification<Job> spec, Pageable pageable);
@@ -143,16 +145,16 @@ public interface JobRepository extends JpaRepository<Job,Long> {
             @Param("endDate") Instant endDate
     );
 
-    @Query("SELECT j FROM Job as j "+
-        "LEFT JOIN j.userPackage as up " +
-        "LEFT JOIN up.servicePackage as sp " +
-        "WHERE j.status = :status "+
-        "ORDER BY CASE "+
-        "WHEN sp.packageType = 'FEATURED_JOB' THEN 1 "+
-            "WHEN sp.packageType = 'PRIORITY_BOLD_TITLE' THEN 2 " +
-            "WHEN sp.packageType = 'PRIORITY_DISPLAY' THEN 3 " +
-            "ELSE 4 END, j.updatedAt DESC")
-    Page<Job> findAllWithPackagePriority(@Param("status") JobStatus status, Pageable pageable);
+//    @Query("SELECT j FROM Job as j "+
+//        "LEFT JOIN j.userPackage as up " +
+//        "LEFT JOIN up.servicePackage as sp " +
+//        "WHERE j.status = :status "+
+//        "ORDER BY CASE "+
+//        "WHEN sp.packageType = 'FEATURED_JOB' THEN 1 "+
+//            "WHEN sp.packageType = 'PRIORITY_BOLD_TITLE' THEN 2 " +
+//            "WHEN sp.packageType = 'PRIORITY_DISPLAY' THEN 3 " +
+//            "ELSE 4 END, j.updatedAt DESC")
+//    Page<Job> findAllWithPackagePriority(Specification<Job> spec,@Param("status") JobStatus status, Pageable pageable);
 
 
 
